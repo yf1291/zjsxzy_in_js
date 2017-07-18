@@ -77,10 +77,11 @@ def column_append(ticker,
 def get_stock_price_panel():
     files = [f for f in os.listdir(const.STOCK_DIR)]
     dic = {}
+    shape = 0
     for f in files:
         fname = '%s/%s'%(const.STOCK_DIR, f)
         df = pd.read_excel(fname, index_col=0)
-        dic[f[:9]] = df[['close']]
+        dic[f[:9]] = df[['close', 'mkt_freeshares']]
     pnl = pd.Panel(dic)
     pnl.to_pickle('%s/price.pkl'%(const.DATA_DIR))
 

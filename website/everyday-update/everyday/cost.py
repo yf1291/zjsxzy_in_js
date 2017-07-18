@@ -15,11 +15,44 @@ def get_codes(index_code):
     df = pd.read_excel("%s/%s.xlsx"%(const.INDEX_DIR, index_code))
     return df["code"].tolist()
 
+def add_row(date):
+    '''
+    quote不够的时候
+    '''
+    codes = get_codes('881001')
+    everyday = pd.read_excel('D:/everyday.xlsx', index_col=0)
+    for code in codes[:1]:
+        print('updating %s...'%(code))
+        fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
+        df = pd.read_excel(fname, index_col=0)
+        add_df = everyday.loc[code].to_frame().transpose()
+        add_df['date'] = datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(0,0.005)
+        add_df.set_index('date', inplace=True)
+        df = df.append(add_df)
+        print df.tail()
+        df.to_excel(fname)
+
+def add_column(field):
+    # w.start()
+    codes = get_codes('881001')
+    for code in codes:
+        fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
+        df = pd.read_excel(fname, index_col=0)
+        if field in df.columns:
+            continue
+        print('add %s...'%(code))
+        # start_date, end_date = df.index[0].strftime('%Y-%m-%d'), df.index[-1].strftime('%Y-%m-%d')
+        # print start_date, end_date
+        # data = w.wsd(code, field, start_date, end_date, "traderType=1;PriceAdj=F")
+        # cols = utils.wind2df(data)[field]
+        # assert(cols.shape[0] == df.shape[0])
+        # df[field] = cols
+        # df.to_excel(fname)
+        # break
+
 def get_wind_data(code, start_date, end_date):
     w.start()
-    fields = "mkt_freeshares,vwap,amt,close,dealnum,free_turn,volume,mfd_buyamt_a,mfd_sellamt_a,high,low"
-    # data = w.wsd(code, fields, beginTime=start_date, endTime=end_date, "PriceAdj=F")
-    # data = w.wsd("000402.SZ", "mkt_freeshares,vwap,amt,close", "2017-03-15", "2017-03-16", "PriceAdj=F")
+    fields = "mkt_freeshares,vwap,amt,close,dealnum,volume,mfd_buyamt_a,mfd_sellamt_a,high,low,pe_ttm"
     data = w.wsd(code, fields, start_date, end_date, "traderType=1;PriceAdj=F")
     return utils.wind2df(data)
 
@@ -29,13 +62,6 @@ def append_to_old_excel(code):
     """
     fname = "%s/%s.xlsx"%(const.STOCK_DIR, code)
     df = pd.read_excel(fname, index_col=0)
-    '''
-    w.start()
-    data = w.wsd(code, 'high,low', df.index[0].strftime('%Y-%m-%d'), df.index[-1].strftime('%Y-%m-%d'), 'PriceAdj=F')
-    add_df = utils.wind2df(data)
-    df = pd.concat([df, add_df], axis=1)
-    df.to_excel(fname)
-    '''
 
     start_date = (df.index[-1] + datetime.timedelta(1)).strftime("%Y-%m-%d")
     if datetime.datetime.now().hour < 15:
@@ -53,7 +79,7 @@ def append_to_old_excel(code):
     df = df.append(add_df)
     df.to_excel(fname)
 
-def update_all(index_code=None, start_date="2014-06-01",
+def update_all(index_code=None, start_date="2011-07-01",
                      end_date=(datetime.datetime.today()-datetime.timedelta(1)).strftime("%Y-%m-%d")):
     if index_code == None:
         # 更新文件夹中所有
@@ -81,6 +107,7 @@ def convert_cost(df, stock=None):
         df.loc[:, "profit percentage"] = np.nan # 盈利持仓占比
         k = 0
         dates = df.index
+        last_shape = 0
     else:
         # 在原有文件上增加新数据
         fname = "%s/%s"%(const.BY_STOCK_DIR, stock)
@@ -95,6 +122,7 @@ def convert_cost(df, stock=None):
         else:
             k = int(old_df.shape[0] - old_df["turnover days"][-1])
         dates = df[df.index > old_df.index[-1]].index
+        last_shape = old_df.shape[0]
 
     for i, index in enumerate(dates):
         if df[df.index <= index]["turnover"].sum() < 1:
@@ -115,7 +143,7 @@ def convert_cost(df, stock=None):
         profit_percentage = profit_volume / temp_df['volume'].sum()
         df.loc[index, "avg cost"] = cost
         # df.loc[index, "turnover days"] = (index - prev_index).days
-        df.loc[index, "turnover days"] = i - k + old_df.shape[0]
+        df.loc[index, "turnover days"] = i - k + last_shape
         df.loc[index, "profit percentage"] = profit_percentage
     return df[["turnover days", "avg cost", "close", "profit percentage"]]
 
@@ -139,12 +167,13 @@ def get_history_turnover(index_code=None):
         files = filter_files(files, index_code)
 
     for stock in files:
-        print("processing %s..."%(stock))
         fname = "%s/%s"%(const.STOCK_DIR, stock)
         df = pd.read_excel(fname, index_col=0)
         if os.path.exists("%s/%s"%(const.BY_STOCK_DIR, stock)):
+            print("processing %s..."%(stock))
             df = convert_cost(df, stock)
         else:
+            print("processing %s..."%(stock))
             df = convert_cost(df)
         df.to_excel("%s/%s"%(const.BY_STOCK_DIR, stock))
 
@@ -258,10 +287,15 @@ def delete_old_files():
         os.remove(fname)
 
 def main():
-    # update_all("881001")
+    update_all("881001")
+    # add_row('2017-06-14')
     # delete_old_files()
     get_history_turnover()
-    os.remove('%s/881001.xlsx'%(const.DATA_DIR))
+    files = ['881001', '399006', '399005', '000016', '000905', '000906', '000300']
+    for f in files:
+        fname = '%s/%s.xlsx'%(const.DATA_DIR, f)
+        if os.path.exists(fname):
+            os.remove(fname)
     cal_market_cost('881001')
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 # DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/data/factor-investing"
 STOCK_DIR = "D:/Data/stocks"
 FACTOR_DIR = "D:/Data/factor"
+STOCK_COST_DIR = "D:/Data/avg_cost/by stock"
+INDEX_FACTOR_DIR = "D:/Data/index-factor"
 # COEF_FILE = "C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/factor-investing/src/coefficient.json"
 # START_DATE = "2005-01-01"
 # END_DATE = "2017-02-28"

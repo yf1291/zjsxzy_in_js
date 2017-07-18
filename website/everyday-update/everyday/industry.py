@@ -15,7 +15,7 @@ INDEX_DIR = 'D:/Data/index'
 def download_data(codes,
                   fields,
                   start_date='2012-01-01',
-                  end_date='2017-03-30'):
+                  end_date='2017-07-07'):
     for code in codes:
         print(code)
         data = w.wsd(code, fields, start_date, end_date)

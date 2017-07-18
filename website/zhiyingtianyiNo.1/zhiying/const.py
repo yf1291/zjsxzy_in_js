@@ -1,2 +1,3 @@
-first_num_of_portfolio = 4
-last_num_of_portfolio = 19
+first_num_of_portfolio = 7
+last_num_of_portfolio = 20
+exceptions = set([18])

@@ -7,18 +7,11 @@ from WindPy import w
 
 import data
 import const
-
-def rank_percentile(array):
-    """
-    返回s的最后一个元素在s中的分位值
-    """
-    s = pd.Series(array)
-    s = s.rank(pct=True)
-    return s.iloc[-1]
+import utils
 
 def get_pe_ratio(code,
-                 start_date="2012-01-01",
-                 end_date="2017-01-01"):
+                 start_date,
+                 end_date):
     """
     获得PE
     """
@@ -28,14 +21,12 @@ def get_pe_ratio(code,
     return df["pe_ttm"]
 
 def get_pe_ratio_percentile(code,
-                            days=243,
-                            start_date="2012-01-01",
-                            end_date="2017-01-01"):
+                            days,
+                            start_date,
+                            end_date):
     """
     获得PE历史百分比
     """
-    w.start()
-    raw_data = w.wsd(code, 'pe_ttm', start_date, end_date)
-    df = data.wind2df(raw_data)
-    df["pe_percent"] = df["pe_ttm"].rolling(window=days).apply(rank_percentile)
-    return df["pe_percent"]
+    pe = get_pe_raio(code, start_date, end_date)
+    pe_percent = pe.rolling(window=days).apply(utils.rank_percentile)
+    return pe_percent

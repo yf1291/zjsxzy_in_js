@@ -20,8 +20,8 @@ from bokeh.palettes import Spectral8
 DATA_DIR = "C:/Users/jgtzsx01/Documents/sheet/zhiyingtianyi portfolio"
 ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
 
-portfolio_selection = [u"智盈添易一号第%d期"%(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1)]
-portfolio_dict = {u"智盈添易一号第%d期"%(i): unicode(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1)}
+portfolio_selection = [u"智盈添易一号第%d期"%(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if i not in const.exceptions]
+portfolio_dict = {u"智盈添易一号第%d期"%(i): unicode(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if i not in const.exceptions}
 # ASSETS_COLOR = {asset: COLORS[i] for i, asset in enumerate(portfolio_dict.values())}
 source = ColumnDataSource(data=dict())
 source_value = ColumnDataSource(data=dict(date=[], value=[]))
@@ -40,6 +40,7 @@ def update_excel():
         'net value': df[u"单位净值"],
         'year return': df[u"今年以来业绩"],
         'total return': df[u"成立以来业绩"],
+        'annual return': df[u'年化收益率'],
         'max drawdown': df[u"最大回撤"],
         'sharpe': df[u"夏普率"],
         'volatility': df[u"波动率"]
@@ -68,7 +69,7 @@ def update_data():
     values = [t.value for t in text]
     for t in text:
         t.value = ""
-    df = pd.DataFrame(columns=portfolio_dict.values(), index=[0])
+    df = pd.DataFrame(columns=[portfolio_dict[t] for t in portfolio_selection], index=[0])
     df.ix[0] = values
     df.to_csv("%s/%s.csv"%(DATA_DIR, update_time_text.value), index=False)
 
@@ -89,12 +90,13 @@ button.callback = CustomJS(args=dict(source=source),
 
 columns = [
     TableColumn(field="name", title=u"组合"),
-    TableColumn(field="net value", title=u"单位净值"),
-    TableColumn(field="year return", title=u"今年以来业绩"),
-    TableColumn(field="total return", title=u"成立以来业绩"),
-    TableColumn(field="max drawdown", title=u"最大回撤"),
-    TableColumn(field="sharpe", title=u"夏普率"),
-    TableColumn(field="volatility", title=u"波动率")
+    TableColumn(field="net value", title=u"单位净值", width=150),
+    TableColumn(field="year return", title=u"今年以来业绩", width=200),
+    TableColumn(field="total return", title=u"成立以来业绩", width=200),
+    TableColumn(field='annual return', title=u'年化收益率', width=200),
+    TableColumn(field="max drawdown", title=u"最大回撤", width=200),
+    TableColumn(field="sharpe", title=u"夏普率", width=200),
+    TableColumn(field="volatility", title=u"波动率", width=200)
 ]
 
 data_table = DataTable(source=source, columns=columns, width=900, height=500)
@@ -117,11 +119,10 @@ update_row = row(update_time_text, update_button)
 update_button.on_click(update_data)
 text = [TextInput(value="", title=name, width=165) for name in portfolio_selection]
 text_row_1 = row(text[0], text[1], text[2], text[3], text[4], text[5], text[6])
-text_row_2 = row(text[7], text[8], text[9], text[10], text[11], text[12], text[13])
-text_row_3 = row(text[14], text[15])
+text_row_2 = row(text[7], text[8], text[9], text[10], text[11], text[12])
 
 controls = widgetbox(time_text, portfolio_select, button)
 table = widgetbox(data_table)
 
-curdoc().add_root(column(row(controls, table), plot_value, update_row, text_row_1, text_row_2, text_row_3))
+curdoc().add_root(column(row(controls, table), plot_value, update_row, text_row_1, text_row_2))
 curdoc().title = u"智盈添易一号"

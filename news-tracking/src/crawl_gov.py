@@ -19,6 +19,7 @@ def crawl_content(url):
     title = soup.title.text
     title = title.split('_')[0]
     title = title.replace('"', '').replace('|', '').replace('/', '').replace(u'、', '').replace(u'？', '')
+    title = title.rstrip('\n').replace('\r', '')
     date_source = soup.find(class_='pages-date')
     if date_source == None:
         return
@@ -69,7 +70,7 @@ def crawl_sector(sector_name, update_mode=False):
                 with open('./error.txt', 'a') as f:
                     f.write(url + '\n')
                 print(url)
-            if update_mode and downloaded:
+            if update_mode:
                 return
 
 def update():

@@ -1,11 +1,9 @@
 # encoding: utf-8
-
 import pandas as pd
 import numpy as np
 import os
 
 import const
-
 
 def wind2df(raw_data):
     """
@@ -35,12 +33,10 @@ def read_data(fname):
     读取excel表，输出dataframe
     """
     if not os.path.exists(fname):
-        code = fname.split('/')[-1].split('.')
-        code = '.'.join(code[:-1])
-        print("Downloading %s..."%(code))
-        # download_data(code)
-    df = pd.read_excel(fname, index_col=0)
-    return df
+        print('%s file not exists'%(code))
+    else:
+        df = pd.read_excel(fname, index_col=0)
+        return df
 
 def save_factor(code, factor_name, series):
     """
@@ -48,19 +44,10 @@ def save_factor(code, factor_name, series):
     """
     fname = get_factor_filename(code)
     factor_df = read_data(fname)
-    assert(factor_df.shape[0] == series.shape[0])
+    series = series[(series.index >= factor_df.index[0]) & (series.index <= factor_df.index[-1])]
+    # assert(factor_df.shape[0] == series.shape[0])
     if factor_name in factor_df.columns:
         print('factor already exists')
     else:
         factor_df[factor_name] = series
         factor_df.to_excel(fname)
-
-if __name__ == "__main__":
-    codes = [code[:9] for code in os.listdir(const.STOCK_DIR)]
-    for code in codes:
-        print('processing %s...'%(code))
-        fname = get_filename(code)
-        df = read_data(fname)
-        df['caps'] = df['mkt_freeshares']
-        fname = get_factor_filename(code)
-        df[['close', 'caps']].to_excel(fname)

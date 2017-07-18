@@ -106,7 +106,7 @@ def get_codes(index_code):
     return df["code"].tolist()
 
 def get_wind_data(code, start_date, end_date):
-    fields = "mkt_freeshares,vwap,amt,close,dealnum,free_turn,volume,mfd_buyamt_a,mfd_sellamt_a,high,low"
+    fields = "mkt_freeshares,vwap,amt,close,dealnum,volume,mfd_buyamt_a,mfd_sellamt_a,high,low,pe_ttm"
     # data = w.wsd(code, fields, beginTime=start_date, endTime=end_date, "PriceAdj=F")
     # data = w.wsd("000402.SZ", "mkt_freeshares,vwap,amt,close", "2017-03-15", "2017-03-16", "PriceAdj=F")
     w.start()
@@ -119,8 +119,8 @@ def get_wind_data_all(index_code, start_date, end_date):
     codes = get_codes(index_code)
     for code in codes:
         fname = 'D:Data/temp/%s.xlsx'%(code)
-        # if os.path.exists(fname):
-            # continue
+        if os.path.exists(fname):
+            continue
         print('downloading %s...'%(code))
         df = get_wind_data(code, start_date, end_date)
         df["turnover"] = df["amt"] / df["mkt_freeshares"] # 计算换手率
@@ -139,7 +139,7 @@ def merge_data(index_code):
         df.to_excel(fname)
 
 if __name__ == '__main__':
-    # get_wind_data_all('881001', '2012-10-01', '2012-12-31')
+    # get_wind_data_all('881001', '2011-04-01', '2011-06-30')
 
     # merge_data('881001')
     get_history_turnover()

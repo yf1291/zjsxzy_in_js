@@ -37,7 +37,6 @@ def cal_index_liquidity(index_code):
         df['20-day mfd_buyamt_a'] = df['mfd_buyamt_a'].rolling(window=20).sum()
         df['20-day mfd_sellamt_a'] = df['mfd_sellamt_a'].rolling(window=20).sum()
         df['20-day amt'] = df['amt'].rolling(window=20).sum()
-        df['20-day free_turn'] = df['free_turn'].rolling(window=20).sum()
         df['ret'] = df['close'].pct_change()
         df['20-day ret'] = df['ret'].rolling(window=20).mean()
         df['20-day close'] = df['close'].rolling(window=20).mean()

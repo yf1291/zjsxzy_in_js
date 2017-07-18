@@ -24,6 +24,7 @@ import everyday.price as price
 import everyday.const as const
 import everyday.cost as cost
 import everyday.industry as industry
+import everyday.concentration as concentration
 
 ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "HSI.HI": u"恒生指数",
@@ -51,7 +52,7 @@ DEPARTMENT_ENG_NAME = {'881001': u'wdqa',
                        '000906': u'zz800',
                        '399005': u'zxb',
                        '399006': u'cyb'}
-INDUSTRY_NAME = {'CI005001.WI': u'石油石化', 'CI005002.WI': u'煤炭', 'CI005003.WI': u'有色金融',
+INDUSTRY_NAME = {'CI005001.WI': u'石油石化', 'CI005002.WI': u'煤炭', 'CI005003.WI': u'有色金属',
                  'CI005004.WI': u'电力及公用事业', 'CI005005.WI': u'钢铁', 'CI005006.WI': u'基础化工',
                  'CI005007.WI': u'建筑', 'CI005008.WI': u'建材', 'CI005009.WI': u'轻工制造',
                  'CI005010.WI': u'机械', 'CI005011.WI': u'电力设备', 'CI005012.WI': u'国防军工',
@@ -85,6 +86,7 @@ source_liquidity = ColumnDataSource(data=dict(date=[], sz50=[], hs300=[], zz500=
 source_liquidity_risk = ColumnDataSource(data=dict(date=[], risk=[]))
 source_mean_line = ColumnDataSource(data=dict(date=[], quarter=[], year=[]))
 source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], tdays10=[]))
+source_concentration = ColumnDataSource(data=dict(date=[], concentration=[], price=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -177,15 +179,20 @@ def update_correlation():
     plot_correlation.title.text = asset_text_1.value + u"与" + asset_text_2.value + u"相关性锥"
     source_cor.data = source_cor.from_df(data_df)
 
-def update_cost():
-    index_code = DEPARTMENT_REV_NAME[department_select.value]
+def update_cost(industry=False):
+    if not industry:
+        index_code = DEPARTMENT_REV_NAME[department_select.value]
+        name = department_select.value
+    else:
+        index_code = INDUSTRY_REV_NAME[industry_select.value]
+        name = industry_select.value
     plot_cost.title.text = u"计算中..."
     plot_profit.title.text = u"计算中..."
     plot_turnover_days.title.text = u"计算中..."
     cost.cal_market_cost(index_code)
-    plot_cost.title.text = department_select.value + u"持有成本盈亏"
-    plot_profit.title.text = department_select.value + u"持仓盈亏百分比"
-    plot_turnover_days.title.text = department_select.value + u'平均换手天数'
+    plot_cost.title.text = name + u"持有成本盈亏"
+    plot_profit.title.text = name + u"持仓盈亏百分比"
+    plot_turnover_days.title.text = name + u'平均换手天数'
     fname = "%s/%s.xlsx"%(const.DATA_DIR, index_code)
     market_df = pd.read_excel(fname, index_col=0)
     source_turnover_days.data = {'date': market_df.index.values,
@@ -252,6 +259,11 @@ def update_industry_consistency():
     data_df = data_df[data_df.index >= '2015-01-01']
     source_consistency.data = source_consistency.from_df(data_df)
 
+def update_concentration():
+    data_df = concentration.get_dataframe()
+    data_df['date'] = data_df.index
+    source_concentration.data = source_concentration.from_df(data_df)
+
 def update_all():
     update_statistics()
     update_data()
@@ -261,6 +273,7 @@ def update_all():
     update_liquidity()
     update_liquidity_risk()
     update_mean_line()
+    update_concentration()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -274,7 +287,7 @@ asset_text_2 = TextInput(value="HSI.HI", title=u"资产二（万得代码）", w
 department_select = Select(value=u"万得全A", title=u"选择板块", width=300, options=index_selections)
 department_select.on_change('value', lambda attr, old, new: update_cost())
 industry_select = Select(value=u"石油石化", title=u"选择行业", width=300, options=industry_seletions)
-industry_select.on_change('value', lambda attr, old, new: update_cost())
+industry_select.on_change('value', lambda attr, old, new: update_cost(industry=True))
 liquidity_select = Select(value='Corwin and Schultz', title=u'选择流动性风险度量', width=300, options=liquidity_selections)
 liquidity_select.on_change('value', lambda attr, old, new: update_liquidity_risk())
 index_select = Select(value=u'万得全A', title=u'选择指数', width=300, options=index_selections)
@@ -395,6 +408,14 @@ plot_turnover_days.line('date', 'tdays', source=source_turnover_days, line_width
 plot_turnover_days.line('date', 'tdays5', source=source_turnover_days, line_width=1, color='green', legend=u'5天均值')
 plot_turnover_days.line('date', 'tdays10', source=source_turnover_days, line_width=1, color='red', legend=u'10天均值')
 
+plot_concentration = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_concentration.yaxis.minor_tick_line_color = None
+plot_concentration.title.text_font_size = '15pt'
+plot_concentration.title.text_font = 'Microsoft Yahei'
+plot_concentration.title.text = u'股票收益率集中性'
+plot_concentration.vbar(x='date', top='concentration', bottom=0, width=1, source=source_concentration)
+plot_concentration.line('date', 'price', source=source_concentration, color='red', line_width=1, legend=u'万得全A')
+
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 
 update_all()
@@ -411,5 +432,5 @@ inputs = widgetbox(time_text, time_end_text, asset_select)
 
 curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation, plot_consistency,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
-                         plot_liquidity, liquidity_row, plot_liquidity_risk, plot_mean_line, plot_blank))
+                         plot_liquidity, liquidity_row, plot_liquidity_risk, plot_concentration, plot_mean_line, plot_blank))
 curdoc().title = u"每日资产总结"
