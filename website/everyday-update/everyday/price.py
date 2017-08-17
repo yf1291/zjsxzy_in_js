@@ -14,5 +14,6 @@ def get_dataframe(symbol, start_date, end_date):
     dataframe['date'] = pd.to_datetime(dataframe['date'], format="%Y-%m-%d")
     dataframe = dataframe.set_index('date')
     dataframe = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)]
-    dataframe = dataframe.resample('BM').last()
+    # dataframe = dataframe.resample('BM').last()
+    dataframe = dataframe.rolling(window=20).mean()
     return dataframe

@@ -2,7 +2,6 @@
 
 import pandas as pd
 import numpy as np
-import pyfolio as pf
 import datetime
 import os
 
@@ -46,6 +45,10 @@ def save_mixed_fund_panel():
             print(item)
             df = pnl.minor_xs(item)
             df.to_pickle('%s/mixed_%s.pkl'%(const.FOF_DIR, item))
+        if item == 'nav_adj':
+            df = pnl.minor_xs(item).pct_change()
+            df.to_pickle('%s/mixed_return.pkl'%(const.FOF_DIR))
+            utils.calculate_empyrical('mixed')
 
     # pnl.to_pickle('%s/mixed.pkl'%(const.FOF_DIR))
 

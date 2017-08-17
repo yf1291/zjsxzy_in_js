@@ -80,3 +80,13 @@ def down_historical_nav(ticker):
     df = wind2df(data)
     df = df[df.index >= '2010-01-01']
     df.to_excel('%s/history/%s.xlsx'%(const.DATA_DIR, ticker))
+
+def calculate_empyrical(fund_type):
+    filename = '%s/%s_return.pkl'%(const.FOF_DIR, fund_type)
+    ret_df = pd.read_pickle(filename)
+    # Omega Ratio
+    df = pd.DataFrame(index=ret_df.columns)
+    df.loc[:, 'omega'] = ret_df.apply(lambda x: pf.empyrical.omega_ratio(x))
+
+    fname = '%s/%s_empyrical.xlsx'%(const.FOF_DIR, fund_type)
+    df.to_excel(fname)

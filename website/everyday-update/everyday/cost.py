@@ -13,13 +13,13 @@ import utils
 
 def get_codes(index_code):
     df = pd.read_excel("%s/%s.xlsx"%(const.INDEX_DIR, index_code))
-    return df["code"].tolist()
+    return df["wind_code"].tolist()
 
 def add_row(date):
     '''
     quote不够的时候
     '''
-    codes = get_codes('881001')
+    codes = get_codes('881001.WI')
     everyday = pd.read_excel('D:/everyday.xlsx', index_col=0)
     for code in codes[:1]:
         print('updating %s...'%(code))
@@ -34,7 +34,7 @@ def add_row(date):
 
 def add_column(field):
     # w.start()
-    codes = get_codes('881001')
+    codes = get_codes('881001.WI')
     for code in codes:
         fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
         df = pd.read_excel(fname, index_col=0)
@@ -71,8 +71,10 @@ def append_to_old_excel(code):
     if datetime.datetime.strptime(start_date, "%Y-%m-%d") > datetime.datetime.strptime(end_date, "%Y-%m-%d"):
         return
 
-    print("updating %s"%(code))
     add_df = get_wind_data(code, start_date, end_date)
+    if 'outmessage' in add_df.columns:
+        return
+    print("updating %s"%(code))
     # print add_df
     add_df["turnover"] = add_df["amt"] / add_df["mkt_freeshares"]
 
@@ -145,12 +147,13 @@ def convert_cost(df, stock=None):
         # df.loc[index, "turnover days"] = (index - prev_index).days
         df.loc[index, "turnover days"] = i - k + last_shape
         df.loc[index, "profit percentage"] = profit_percentage
-    return df[["turnover days", "avg cost", "close", "profit percentage"]]
+    df.loc[:, "current return"] = (df["close"] - df["avg cost"]) / df["avg cost"]
+    return df[["turnover days", "avg cost", "close", "profit percentage", "current return"]]
 
 def filter_files(files, index_code):
     index_file = "%s/%s.xlsx"%(const.INDEX_DIR, index_code)
     df = pd.read_excel(index_file)
-    codes = set(df["code"].tolist())
+    codes = set(df["wind_code"].tolist())
     files = [f for f in files if f[:-5] in codes]
     return files
 
@@ -184,9 +187,13 @@ def get_all_by_stock_panel(files):
     dic = {}
     for stock in files:
         # print("processing %s..."%(stock))
-        df = pd.read_excel("%s/%s"%(const.BY_STOCK_DIR, stock), index_col=0)
+        fname = '%s/%s'%(const.BY_STOCK_DIR, stock)
+        df = pd.read_excel(fname, index_col=0)
+        if 'current return' not in df.columns:
+            df['current return'] = (df['close'] - df['avg cost']) / df['avg cost']
+            df.to_excel(fname)
         df.index = pd.to_datetime(df.index)
-        dic[stock[:-5]] = df
+        dic[stock[:-5]] = df[['current return', 'turnover days', 'profit percentage']]
     pnl = pd.Panel(dic)
     return pnl
 
@@ -205,10 +212,8 @@ def save_by_date(index_code=None):
         df.to_excel("%s/%s.xlsx"%(const.BY_DATE_DIR, date.strftime("%Y-%m-%d")))
 """
 
+"""
 def calculate_profit_percentage(index_code=None):
-    """
-    计算每只股票的盈利持仓占比
-    """
     files = [f for f in os.listdir(const.BY_STOCK_DIR)]
     if index_code != None:
         files = filter_files(files, index_code)
@@ -225,6 +230,7 @@ def calculate_profit_percentage(index_code=None):
             return
 
         df.loc[:, 'profit percentage'] = np.nan
+        df.loc[:, 'current return'] = np.nan
         for index in df.index:
             turnover_days = df.loc[index, 'turnover days']
             current_price = df.loc[index, 'close']
@@ -233,7 +239,9 @@ def calculate_profit_percentage(index_code=None):
                 select_df = df[(df.index >= start_day) & (df.index <= index)]
                 profit_volume = select_df[select_df['vwap'] < current_price]['volume'].sum()
                 df.loc[index, 'profit percentage'] = profit_volume / select_df['volume'].sum()
-        df[['turnover days', 'avg cost', 'close', 'profit percentage']].to_excel(fname)
+                df.loc[index, 'current return'] = (df.loc[index, 'close'] - df.loc[index, 'avg cost']) / df.loc[index, 'avg cost']
+        df[['turnover days', 'avg cost', 'close', 'profit percentage', 'current return']].to_excel(fname)
+"""
 
 def cal_market_cost(index_code=None):
     """
@@ -249,22 +257,16 @@ def cal_market_cost(index_code=None):
         files = filter_files(files, index_code)
 
     pnl = get_all_by_stock_panel(files)
-    # 计算每天的持有成本
-    pnl.ix[:, :, "current return"] = (pnl.minor_xs("close") - pnl.minor_xs("avg cost")) / pnl.minor_xs("avg cost")
-    # 计算滚动的持有成本
-    # t = 8
-    # pnl.ix[:, :, "rolling current return"] = pnl.minor_xs("current return").rolling(window=t).mean()
 
     dates = pnl.major_axis
     market_df = pd.DataFrame(index=dates)
     # 市场平均的换手天数
     market_df.loc[:, "turnover days"] = pnl.minor_xs("turnover days").mean(axis=1)
     # 市场平均的成本
+    # market_df.loc[:, "current return"] = ((pnl.minor_xs("close") - pnl.minor_xs("avg cost")) / pnl.minor_xs("avg cost")).mean(axis=1)
     market_df.loc[:, "current return"] = pnl.ix[:, :, "current return"].mean(axis=1)
-    # 市场平均的滚动成本
-    # market_df.loc[:, "rolling current return"] = pnl.ix[:, :, "rolling current return"].mean(axis=1)
     # 市场平均盈亏占比
-    market_df['profit percentage'] = pnl.ix[:, :, 'profit percentage'].mean(axis=1)
+    market_df.loc[:, 'profit percentage'] = pnl.ix[:, :, 'profit percentage'].mean(axis=1)
     # 市场kurtosis, kewness
     """
     market_df["skewness"] = np.nan
@@ -287,16 +289,26 @@ def delete_old_files():
         os.remove(fname)
 
 def main():
-    update_all("881001")
+    update_all("881001.WI")
     # add_row('2017-06-14')
     # delete_old_files()
     get_history_turnover()
-    files = ['881001', '399006', '399005', '000016', '000905', '000906', '000300']
+    files = ['881001.WI', '399006.SZ', '399005.SZ', '000016.SH', '000905.SH', '000906.SH', '000300.SH']
     for f in files:
         fname = '%s/%s.xlsx'%(const.DATA_DIR, f)
         if os.path.exists(fname):
             os.remove(fname)
-    cal_market_cost('881001')
+    cal_market_cost('881001.WI')
+
+def test():
+    files = [f for f in os.listdir(const.BY_STOCK_DIR)]
+    for f in files:
+        print("processing %s..."%(f))
+        fname = '%s/%s'%(const.BY_STOCK_DIR, f)
+        df = pd.read_excel(fname, index_col=0)
+        df["current return"] = (df["close"] - df["avg cost"]) / df["avg cost"]
+        df.to_excel(fname)
 
 if __name__ == "__main__":
+    # test()
     main()

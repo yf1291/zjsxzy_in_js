@@ -151,6 +151,7 @@ def word_asset_correlation():
 
 def main():
     # pass
+    # get_word_heat(u'美国')
     calculate_words()
     # word_asset_correlation()
     get_words_percentile()

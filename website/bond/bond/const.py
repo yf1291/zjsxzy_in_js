@@ -2,6 +2,7 @@
 
 BOND_DIR = 'D:/Data/bonds'
 treasury_file = '%s/treasury.xlsx'%(BOND_DIR)
+usa_treasury_file = '%s/usa_treasury.xlsx'%(BOND_DIR)
 libor_file = '%s/libor.xlsx'%(BOND_DIR)
 corporate_file = '%s/corporate.xlsx'%(BOND_DIR)
 repo_file = '%s/repo.xlsx'%(BOND_DIR)
@@ -26,7 +27,10 @@ edb2col = {'M1001099': 'CGB3M',
              'M0290205': 'USDCNY spot',
              'M0068014': 'USDCNY NDF 1Y',
              'M1004271': u'中债国开债到期收益率 10年',
+             'M1004263': u'中债国开债到期收益率 1年',
              'M0074413': u'理财产品预期年收益率 3个月',
              'M0074415': u'理财产品预期年收益率 6个月',
-             'M0074417': u'理财产品预期年收益率 1年'}
+             'M0074417': u'理财产品预期年收益率 1年',
+             'M1001791': u'美国国债到期收益率 10年',
+             'M1001787': u'美国国债到期收益率 2年'}
 col2edb = {v: k for k, v in edb2col.iteritems()}

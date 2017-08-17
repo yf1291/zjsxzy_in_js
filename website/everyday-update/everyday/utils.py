@@ -60,4 +60,4 @@ def roll(df, w):
 def get_index_component(index_code):
     index_file = "%s/%s.xlsx"%(const.INDEX_DIR, index_code)
     df = pd.read_excel(index_file)
-    return df['code'].tolist()
+    return df['wind_code'].tolist()

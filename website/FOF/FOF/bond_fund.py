@@ -2,7 +2,6 @@
 
 import pandas as pd
 import numpy as np
-import pyfolio as pf
 import datetime
 import os
 
@@ -42,9 +41,14 @@ def save_bond_fund_panel():
 
     for item in pnl.minor_axis:
         if item.endswith('return'):
+            continue
             print(item)
             df = pnl.minor_xs(item)
             df.to_pickle('%s/bond_%s.pkl'%(const.FOF_DIR, item))
+        if item == 'nav_adj':
+            df = pnl.minor_xs(item).pct_change()
+            df.to_pickle('%s/bond_return.pkl'%(const.FOF_DIR))
+            utils.calculate_empyrical('bond')
 
     # pnl.to_pickle('%s/bond.pkl'%(const.FOF_DIR))
 

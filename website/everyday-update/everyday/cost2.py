@@ -84,7 +84,9 @@ def convert_cost(df, stock):
         # df.loc[index, "turnover days"] = (index - prev_index).days
         df.loc[index, "turnover days"] = i - k
         df.loc[index, "profit percentage"] = profit_percentage
-    return df[["turnover days", "avg cost", "close", "profit percentage"]]
+
+    df['current return'] = (df['close'] - df['avg cost']) / df['avg cost']
+    return df[["turnover days", "avg cost", "close", "profit percentage", 'current return']]
 
 def get_history_turnover():
     files = [f for f in os.listdir(STOCK_DIR) if f.endswith("xlsx")]
@@ -103,7 +105,7 @@ def get_history_turnover():
 
 def get_codes(index_code):
     df = pd.read_excel("%s/%s.xlsx"%(const.INDEX_DIR, index_code))
-    return df["code"].tolist()
+    return df["wind_code"].tolist()
 
 def get_wind_data(code, start_date, end_date):
     fields = "mkt_freeshares,vwap,amt,close,dealnum,volume,mfd_buyamt_a,mfd_sellamt_a,high,low,pe_ttm"
@@ -139,7 +141,7 @@ def merge_data(index_code):
         df.to_excel(fname)
 
 if __name__ == '__main__':
-    # get_wind_data_all('881001', '2011-04-01', '2011-06-30')
+    # get_wind_data_all('881001.WI', '2011-01-01', '2011-03-31')
 
-    # merge_data('881001')
+    # merge_data('881001.WI')
     get_history_turnover()

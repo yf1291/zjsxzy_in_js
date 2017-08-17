@@ -21,6 +21,14 @@ def get_all_codes():
     codes = [code.rstrip('.xlsx') for code in os.listdir(const.STOCK_DIR)]
     return codes
 
+def get_index_component(index_code):
+    '''
+    获取指数的成分股
+    '''
+    index_file = "%s/%s.xlsx"%(const.INDEX_COMP_DIR, index_code)
+    df = pd.read_excel(index_file)
+    return df['wind_code'].tolist()
+
 def get_all_panel(DATA_DIR, files):
     """
     给定一堆资产目录和文件名，返回Panel
@@ -29,6 +37,18 @@ def get_all_panel(DATA_DIR, files):
     for f in files:
         df = pd.read_excel('%s/%s'%(DATA_DIR, f), index_col=0)
         dic[f.rstrip('.xlsx')] = df
+    pnl = pd.Panel(dic)
+    return pnl
+
+def get_factor_panel(codes, columns):
+    """
+    给定一堆wind代码和要获取的因子名称，返回Panel
+    """
+    dic = {}
+    for code in codes:
+        fname = '%s/%s.xlsx'%(const.FACTOR_DIR, code)
+        df = pd.read_excel(fname, index_col=0, parse_cols=columns)
+        dic[code] = df
     pnl = pd.Panel(dic)
     return pnl
 

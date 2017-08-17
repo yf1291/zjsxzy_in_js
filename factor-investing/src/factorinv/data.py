@@ -28,12 +28,19 @@ def get_factor_filename(code):
     fname = '%s/%s.xlsx'%(const.FACTOR_DIR, code)
     return fname
 
+def get_fundamental_filename(code):
+    """
+    得到对应代码的基本面因子本地文件
+    """
+    fname = '%s/%s.xlsx'%(const.FUNDAMENTAL_DIR, code)
+    return fname
+
 def read_data(fname):
     """
     读取excel表，输出dataframe
     """
     if not os.path.exists(fname):
-        print('%s file not exists'%(code))
+        print('%s file not exists'%(fname))
     else:
         df = pd.read_excel(fname, index_col=0)
         return df

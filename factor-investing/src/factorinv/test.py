@@ -7,6 +7,7 @@ import os
 import const
 import utils
 import analysis
+import index_factor
 
 def test_index_factor_return():
     print("test index factor return")
@@ -19,6 +20,7 @@ def test_index_factor_return():
     df = pnl.minor_xs('return').rolling(window=k).mean()
     return_df = pnl.minor_xs('return')
     daily_return = analysis.factor_return(df, return_df, threshold=0.2)
+    daily_return = daily_return[daily_return != 0]
     # print daily_return
     utils.get_metrics(daily_return)
     acc_ret = utils.get_accumulated_return(daily_return)
@@ -26,4 +28,6 @@ def test_index_factor_return():
     plt.show()
 
 if __name__ == '__main__':
-    test_index_factor_return()
+    # test_index_factor_return()
+    # pnl = utils.get_factor_panel(['000002.SZ'], 'A,B,D')
+    index_factor.pe('000016.SH')

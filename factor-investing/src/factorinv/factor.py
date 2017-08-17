@@ -6,6 +6,7 @@ import os
 
 import defensive
 import momentum
+import fundamental
 import data
 import const
 import utils
@@ -69,6 +70,26 @@ def add_momentum():
         mom12M = momentum.get_k_day_return(code, 243)
         data.save_factor(code, 'momentum 12M', mom12M)
 
+def add_fundamental():
+    '''
+    添加基本面因子
+    '''
+    codes = utils.get_all_codes()
+    for code in codes:
+        print('adding roic factor for %s...'%(code))
+        # ROIC
+        roic = fundamental.get_roic(code)
+        data.save_factor(code, 'roic', roic)
+        print('adding roe factor for %s...'%(code))
+        # ROE
+        roe = fundamental.get_roe(code)
+        data.save_factor(code, 'roe', roe)
+        print('adding roa factor for %s...'%(code))
+        # ROA
+        roa = fundamental.get_roa(code)
+        data.save_factor(code, 'roa', roa)
+
 if __name__ == '__main__':
     # add_momentum()
-    create_factor()
+    # create_factor()
+    add_fundamental()

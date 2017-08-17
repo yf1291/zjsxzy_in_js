@@ -28,6 +28,15 @@ def update_chusa():
                          'usa10y': df['UST10Y'] / 100,
                          'spread': (df['CGB10Y'] - df['UST10Y']) / 100}
 
+# 美国短、长期国债收益率
+source_usa_treasury = ColumnDataSource(data=dict(date=[], usa10y=[], usa2y=[]))
+def update_usa_treasury():
+    print('update usa treasury')
+    df = pd.read_excel(const.usa_treasury_file, index_col=0, sheetname='bond')
+    source_usa_treasury.data = {'date': df.index,
+                                'usa10y': df[u'美国国债到期收益率 10年'] / 100,
+                                'usa2y': df[u'美国国债到期收益率 2年'] / 100}
+
 # TED spread
 source_ted = ColumnDataSource(data=dict(date=[], shibor3m=[], cgb3m=[], spread=[]))
 def update_ted():
@@ -46,11 +55,23 @@ source_cgb10y_1y = ColumnDataSource(data=dict(date=[], cgb10y=[], cgb1y=[], spre
 def update_cgb10y_1y():
     print('update cgb10y 1y')
     df = pd.read_excel(const.treasury_file, index_col=0, sheetname='china')
-    df = df.rolling(window=20).mean()
+    # df = df.rolling(window=20).mean()
+    df = df[df.index >= '2006-01-01']
     source_cgb10y_1y.data = {'date': df.index,
                              'cgb10y': df['CGB10Y'] / 100,
                              'cgb1y': df['CGB1Y'] / 100,
                              'spread': (df['CGB10Y'] - df['CGB1Y']) / 100}
+
+# 10年期国开债收益率-1年期国开债收益率
+source_cdb10y_1y = ColumnDataSource(data=dict(date=[], cdb10y=[], cdb1y=[], spread=[]))
+def update_cdb10y_1y():
+    print('update cdb10y 1y')
+    df = pd.read_excel(const.bank_file, index_col=0, sheetname='cdb')
+    df = df[df.index >= '2006-01-01']
+    source_cdb10y_1y.data = {'date': df.index,
+                             'cdb10y': df[u'中债国开债到期收益率 10年'] / 100,
+                             'cdb1y': df[u'中债国开债到期收益率 1年'] / 100,
+                             'spread': (df[u'中债国开债到期收益率 10年'] - df[u'中债国开债到期收益率 1年']) / 100}
 
 # 信用利差
 source_coporate = ColumnDataSource(data=dict(date=[], spr1y=[], spr5y=[]))
@@ -121,8 +142,10 @@ def update_product():
 
 def update_all():
     update_chusa()
+    update_usa_treasury()
     update_ted()
     update_cgb10y_1y()
+    update_cdb10y_1y()
     update_coporate()
     update_repo()
     update_currency()
@@ -140,6 +163,15 @@ plot_chusa.title.text = u'中美10年期国债收益率与利差'
 plot_chusa.title.text_font = "Microsoft YaHei"
 plot_chusa.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_chusa.yaxis.minor_tick_line_color = None
+
+plot_usa_treasury = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_usa_treasury.line('date', 'usa10y', source=source_usa_treasury, color='red', legend=u'美国10年期国债收益率')
+plot_usa_treasury.line('date', 'usa2y', source=source_usa_treasury, legend=u'美国2年期国债收益率')
+plot_usa_treasury.title.text_font_size = "15pt"
+plot_usa_treasury.title.text = u'美国2年、10年期国债收益率'
+plot_usa_treasury.title.text_font = "Microsoft YaHei"
+plot_usa_treasury.yaxis.formatter = NumeralTickFormatter(format="0.00%")
+plot_usa_treasury.yaxis.minor_tick_line_color = None
 
 plot_ted = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_ted.line('date', 'shibor3m', source=source_ted, color='#FF9999', line_width=2, legend='SHIBOR：3个月')
@@ -160,6 +192,16 @@ plot_cgb10y_1y.title.text = u'10年期国债收益率-1年期国债收益率（G
 plot_cgb10y_1y.title.text_font = "Microsoft YaHei"
 plot_cgb10y_1y.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_cgb10y_1y.yaxis.minor_tick_line_color = None
+
+plot_cdb10y_1y = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_cdb10y_1y.line('date', 'cdb10y', source=source_cdb10y_1y, color='#990000', line_width=2, legend=u'10年期国开债收益率')
+plot_cdb10y_1y.line('date', 'cdb1y', source=source_cdb10y_1y, color='#FF9999', line_width=2, legend=u'1年期国开债收益率')
+plot_cdb10y_1y.line('date', 'spread', source=source_cdb10y_1y, color='green', line_width=2, legend=u'利差')
+plot_cdb10y_1y.title.text_font_size = "15pt"
+plot_cdb10y_1y.title.text = u'10年期国开债收益率-1年期国开债收益率'
+plot_cdb10y_1y.title.text_font = "Microsoft YaHei"
+plot_cdb10y_1y.yaxis.formatter = NumeralTickFormatter(format="0.00%")
+plot_cdb10y_1y.yaxis.minor_tick_line_color = None
 
 plot_corporate = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_corporate.line('date', 'spr1y', source=source_coporate, line_width=2, color='red', legend=u'AA-AAA，1年')
@@ -219,9 +261,9 @@ plot_product.title.text_font = "Microsoft YaHei"
 plot_product.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_product.yaxis.minor_tick_line_color = None
 
-
 update_all()
 
-curdoc().add_root(column(plot_chusa, plot_ted, plot_cgb10y_1y, plot_corporate, plot_credit,
+curdoc().add_root(column(plot_chusa, plot_usa_treasury, plot_ted, plot_cgb10y_1y,
+                         plot_cdb10y_1y, plot_corporate, plot_credit,
                          plot_repo, plot_cny, plot_cdb, plot_product))
 curdoc().title = u"债券指标"

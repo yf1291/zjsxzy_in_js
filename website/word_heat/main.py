@@ -11,7 +11,7 @@ import word.word_heat_level as word_heat_level
 import word.const as const
 
 from bokeh.io import curdoc
-from bokeh.layouts import row, widgetbox
+from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource, CustomJS, NumberFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button
 from bokeh.plotting import figure
@@ -80,6 +80,7 @@ def update_data():
     update_title()
 
     dataframe = pd.read_csv(fname)
+    # print dataframe.tail()
     # dataframe.to_excel("./%s.xlsx"%(text.value), index=False)
     # 可下载数据
     source_download.data = source_download.from_df(dataframe)
@@ -142,23 +143,22 @@ button = Button(label=u"下载数据", button_type="success", width=300)
 button.callback = CustomJS(args=dict(source=source_download),
                            code=open(join(dirname(__file__), "download.js")).read())
 
-absolute_corr_columns = [TableColumn(field=x, title=x) for x in assets]
-absolute_corr_data_table = DataTable(source=source_absolute_corr, columns=absolute_corr_columns, width=1000)
-asset_text = TextInput(title=u'资产', value='AU9999.SGE')
-asset_text.on_change('value', lambda attr, old, new: update_corr())
-word_text = TextInput(title=u'关键词', value=u'加息')
-word_text.on_change('value', lambda attr, old, new: update_corr())
+# absolute_corr_columns = [TableColumn(field=x, title=x) for x in assets]
+# absolute_corr_data_table = DataTable(source=source_absolute_corr, columns=absolute_corr_columns, width=1000)
+# asset_text = TextInput(title=u'资产', value='AU9999.SGE')
+# asset_text.on_change('value', lambda attr, old, new: update_corr())
+# word_text = TextInput(title=u'关键词', value=u'加息')
+# word_text.on_change('value', lambda attr, old, new: update_corr())
 
 update_data()
-update_correlation()
-update_corr()
+# update_correlation()
+# update_corr()
 update_percentile()
 
 # Set up layouts and add to document
 inputs = widgetbox(text, slider, year_select, button)
 table = widgetbox(data_table)
-text_box = row(asset_text, word_text)
+# text_box = row(asset_text, word_text)
 
-curdoc().add_root(row(inputs, table, plot_absolute, plot, plot_weighted, per_table, absolute_corr_data_table,
-                      text_box, plot_corr, width=800))
+curdoc().add_root(column(row(inputs, table), plot_absolute, plot, plot_weighted, per_table))
 curdoc().title = u"关键词历史热度"

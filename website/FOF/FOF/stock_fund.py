@@ -2,7 +2,6 @@
 
 import pandas as pd
 import numpy as np
-import pyfolio as pf
 import datetime
 import os
 
@@ -45,6 +44,10 @@ def save_stock_fund_panel():
             print(item)
             df = pnl.minor_xs(item)
             df.to_pickle('%s/stock_%s.pkl'%(const.FOF_DIR, item))
+        if item == 'nav_adj':
+            df = pnl.minor_xs(item).pct_change()
+            df.to_pickle('%s/stock_return.pkl'%(const.FOF_DIR))
+            utils.calculate_empyrical('stock')
 
     # pnl.to_pickle('%s/stock.pkl'%(const.FOF_DIR))
 

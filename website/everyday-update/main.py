@@ -38,20 +38,20 @@ ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "B.IPE": u"WTI原油",
                 "CA.LME": u"LME铜",
                 "VIX.GI": u"隐含波动率指数"}
-DEPARTMENT_NAME = {'881001': u'万得全A',
-                   '000016': u'上证50',
-                   '000300': U'沪深300',
-                   '000905': u'中证500',
-                   '000906': u'中证800',
-                   '399005': u'中小板',
-                   '399006': u'创业板'}
-DEPARTMENT_ENG_NAME = {'881001': u'wdqa',
-                       '000016': u'sz50',
-                       '000300': u'hs300',
-                       '000905': u'zz500',
-                       '000906': u'zz800',
-                       '399005': u'zxb',
-                       '399006': u'cyb'}
+DEPARTMENT_NAME = {'881001.WI': u'万得全A',
+                   '000016.SH': u'上证50',
+                   '000300.SH': u'沪深300',
+                   '000905.SH': u'中证500',
+                   '000906.SH': u'中证800',
+                   '399005.SZ': u'中小板',
+                   '399006.SZ': u'创业板'}
+DEPARTMENT_ENG_NAME = {'881001.WI': u'wdqa',
+                       '000016.SH': u'sz50',
+                       '000300.SH': u'hs300',
+                       '000905.SH': u'zz500',
+                       '000906.SH': u'zz800',
+                       '399005.SH': u'zxb',
+                       '399006.SH': u'cyb'}
 INDUSTRY_NAME = {'CI005001.WI': u'石油石化', 'CI005002.WI': u'煤炭', 'CI005003.WI': u'有色金属',
                  'CI005004.WI': u'电力及公用事业', 'CI005005.WI': u'钢铁', 'CI005006.WI': u'基础化工',
                  'CI005007.WI': u'建筑', 'CI005008.WI': u'建材', 'CI005009.WI': u'轻工制造',
@@ -82,7 +82,8 @@ source_mom = ColumnDataSource(data=dict(date=[], mom5=[], mom20=[], mom60=[], mo
 source_turnover_cost = ColumnDataSource(data=dict(date=[], cost=[], profit=[], mean=[], zero=[], prof_mean=[], prof_50=[]))
 source_turnover_cost_text = ColumnDataSource(data=dict(text_x=[], text_y=[], text=[], prof_text_y=[], prof_text=[]))
 source_consistency = ColumnDataSource(data=dict(date=[], con60=[]))
-source_liquidity = ColumnDataSource(data=dict(date=[], sz50=[], hs300=[], zz500=[], zz800=[], zxb=[], cyb=[], wdqa=[]))
+# source_liquidity = ColumnDataSource(data=dict(date=[], sz50=[], hs300=[], zz500=[], zz800=[], zxb=[], cyb=[], wdqa=[]))
+source_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
 source_liquidity_risk = ColumnDataSource(data=dict(date=[], risk=[]))
 source_mean_line = ColumnDataSource(data=dict(date=[], quarter=[], year=[]))
 source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], tdays10=[]))
@@ -103,7 +104,7 @@ def update_data():
     symbol = ASSETS_REV_NAME[asset_select.value]
 
     dataframe = price.get_dataframe(symbol, start_date, end_date)
-    print dataframe.head()
+    print dataframe.tail()
     update_title()
     if dataframe.empty:
         source_price.data = {}
@@ -236,10 +237,19 @@ def update_cost(industry=False):
                                                     u"偏离均值%.2f个标准差"%(prof_dev_value)]}
 
 def update_liquidity():
-    fname = '%s/liquidity.xlsx'%(const.DATA_DIR)
-    df = pd.read_excel(fname)
-    df.index.name = 'date'
-    source_liquidity.data = source_liquidity.from_df(df)
+    # fname = '%s/liquidity.xlsx'%(const.DATA_DIR)
+    symbol = liquidity_asset.value
+    fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
+    if not os.path.exists(fname):
+        wind_data.download_data(symbol)
+    df = pd.read_csv(fname)
+    df['date'] = pd.to_datetime(df['date'], format="%Y-%m-%d")
+    df = df.set_index('date')
+    df['ret'] = df['close'].pct_change()
+    df['liquidity'] = df['ret'].rolling(window=121).apply(lambda x: pd.Series(x).autocorr(20))
+    df = df.dropna()
+    plot_liquidity.title.text = symbol + u' 流动性指标（自相关系数）：自相关系数越低，流动性越好'
+    source_liquidity.data = {'date': df.index.values, 'liquidity': df['liquidity'].values}
 
 def update_liquidity_risk():
     fname = '%s/amihud_liquidity.xlsx'%(const.DATA_DIR)
@@ -275,6 +285,7 @@ def update_all():
     update_mean_line()
     update_concentration()
 
+
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
 time_text = TextInput(value="2002-01-01", title="开始时间（例如：20050101或2005-01-01）", width=300)
@@ -288,6 +299,8 @@ department_select = Select(value=u"万得全A", title=u"选择板块", width=300
 department_select.on_change('value', lambda attr, old, new: update_cost())
 industry_select = Select(value=u"石油石化", title=u"选择行业", width=300, options=industry_seletions)
 industry_select.on_change('value', lambda attr, old, new: update_cost(industry=True))
+liquidity_asset = TextInput(value='881001.WI', title=u'证券（万得代码）', width=300)
+liquidity_asset.on_change('value', lambda attr, old, new: update_liquidity())
 liquidity_select = Select(value='Corwin and Schultz', title=u'选择流动性风险度量', width=300, options=liquidity_selections)
 liquidity_select.on_change('value', lambda attr, old, new: update_liquidity_risk())
 index_select = Select(value=u'万得全A', title=u'选择指数', width=300, options=index_selections)
@@ -373,13 +386,15 @@ plot_liquidity = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_ty
 plot_liquidity.title.text_font_size = "15pt"
 plot_liquidity.yaxis.minor_tick_line_color = None
 plot_liquidity.title.text_font = "Microsoft YaHei"
-plot_liquidity.title.text = u'流动性指标'
-plot_liquidity.line('date', 'wdqa', source=source_liquidity, line_width=2, color='#002EB8', legend=u'万得全A')
+plot_liquidity.title.text = u'881001.WI 流动性指标（自相关系数）：自相关系数越低，流动性越好'
+plot_liquidity.line('date', 'liquidity', source=source_liquidity, line_width=2)
+# plot_liquidity.vbar(x='date', top='liquidity', bottom=0, width=1, source=source_liquidity)
+# plot_liquidity.line('date', 'wdqa', source=source_liquidity, line_width=2, color='#002EB8', legend=u'万得全A')
 # plot_liquidity.line('date', 'sz50', source=source_liquidity, line_width=2, color='#002EB8', legend=u'上证50')
 # plot_liquidity.line('date', 'hs300', source=source_liquidity, line_width=2, color='#003DF5', legend=u'沪深300')
-plot_liquidity.line('date', 'zz500', source=source_liquidity, line_width=2, color='#33CCFF', legend=u'中证500')
+# plot_liquidity.line('date', 'zz500', source=source_liquidity, line_width=2, color='#33CCFF', legend=u'中证500')
 # plot_liquidity.line('date', 'zxb', source=source_liquidity, line_width=2, color='#33FFCC', legend=u'中小板')
-plot_liquidity.line('date', 'cyb', source=source_liquidity, line_width=2, color='#33FF66', legend=u'创业板')
+# plot_liquidity.line('date', 'cyb', source=source_liquidity, line_width=2, color='#33FF66', legend=u'创业板')
 
 plot_liquidity_risk = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_liquidity_risk.yaxis.minor_tick_line_color = None
@@ -432,5 +447,6 @@ inputs = widgetbox(time_text, time_end_text, asset_select)
 
 curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation, plot_consistency,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
-                         plot_liquidity, liquidity_row, plot_liquidity_risk, plot_concentration, plot_mean_line, plot_blank))
+                         liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
+                         plot_concentration, plot_mean_line, plot_blank))
 curdoc().title = u"每日资产总结"

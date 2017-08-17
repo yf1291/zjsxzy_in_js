@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pyfolio as pf
 import datetime
 import os
 import sys
@@ -119,11 +120,13 @@ def update_data():
     plot_nav.title.text = fund_name + u'净值'
     plot_return.title.text = fund_name + time_select.value + u'收益率'
 
-def get_rank(df, ret_df):
+def get_rank(df, ret_df, empyrical_df):
     percent = 1 - 0.1
     ret_df = ret_df[df['wind_code']]
     df.loc[:, 'current return'] = ret_df.values[-1]
-    df.loc[:, 'volatility'] = ret_df.ix[-min(ret_df.shape[0], time_days[time_select.value]):].std().values
+    # df.loc[:, 'volatility'] = ret_df.ix[-min(ret_df.shape[0], time_days[time_select.value]):].std().values
+    omega_ratio = empyrical_df.loc[df['wind_code'], 'omega'].values
+    df['omega'] = omega_ratio
     ret_df = ret_df.rank(axis=1, pct=True)
     df.loc[:, 'max percentage'] = ret_df.max().values
     df.loc[:, 'max percentage date'] = ret_df.idxmax().values
@@ -142,7 +145,8 @@ def update_table_data(df):
         'fundmanager': df['fundmanager'].values,
         'netasset': df['netasset'].values,
         'current return': df['current return'].values,
-        'volatility': df['volatility'].values,
+        # 'volatility': df['volatility'].values,
+        'omega': df['omega'].values,
         'max percentage': df['max percentage'].values,
         'max percentage date': df['max percentage date'].map(lambda x: x.strftime('%Y-%m-%d')).values
     }
@@ -157,21 +161,24 @@ def select_fund():
         bond_df = bond_fund.get_bond_fund()
         # pnl = pd.read_pickle('%s/bond.pkl'%(const.FOF_DIR))
         ret_df = pd.read_pickle('%s/bond_%s.pkl'%(const.FOF_DIR, time_value))
+        empyrical_df = pd.read_excel('%s/bond_empyrical.xlsx'%(const.FOF_DIR))
         df = bond_fund.filter_bond(bond_df)
     if invtype1_select.value == u'股票型基金':
         stock_df = stock_fund.get_stock_fund()
         # pnl = pd.read_pickle('%s/stock.pkl'%(const.FOF_DIR))
         ret_df = pd.read_pickle('%s/stock_%s.pkl'%(const.FOF_DIR, time_value))
+        empyrical_df = pd.read_excel('%s/stock_empyrical.xlsx'%(const.FOF_DIR))
         df = stock_fund.filter_stock(stock_df)
     if invtype1_select.value == u'混合型基金':
         mixed_df = mixed_fund.get_mixed_fund()
         # pnl = pd.read_pickle('%s/mixed.pkl'%(const.FOF_DIR))
         ret_df = pd.read_pickle('%s/mixed_%s.pkl'%(const.FOF_DIR, time_value))
+        empyrical_df = pd.read_excel('%s/mixed_empyrical.xlsx'%(const.FOF_DIR))
         df = mixed_fund.filter_mixed(mixed_df)
     df = type_filter(df)
     df = scale_filter(df)
     # ret_df = pnl[df['wind_code']].minor_xs(time_dict[time_select.value])
-    df = get_rank(df, ret_df)
+    df = get_rank(df, ret_df, empyrical_df)
     update_table_data(df)
     plot_nav.title.text = nav_title
     plot_return.title.text = ret_title
@@ -201,7 +208,8 @@ columns = [
     TableColumn(field='fundmanager', title=u'基金经理'),
     TableColumn(field='netasset', title=u'基金资产净值', formatter=NumberFormatter(format='$0,0.00')),
     TableColumn(field='current return', title=u'当前业绩', formatter=NumberFormatter(format='0.00%')),
-    TableColumn(field='volatility', title=u'波动率', formatter=NumberFormatter(format='0.00%')),
+    # TableColumn(field='volatility', title=u'波动率', formatter=NumberFormatter(format='0.00%')),
+    TableColumn(field='omega', title=u'Omega', formatter=NumberFormatter(format='0.00')),
     TableColumn(field='max percentage', title=u'最好业绩排名', formatter=NumberFormatter(format='0.00%')),
     TableColumn(field='max percentage date', title=u'获得最好业绩日期')
 ]
