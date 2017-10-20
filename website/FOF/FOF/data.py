@@ -7,11 +7,17 @@ import os
 
 import utils
 import const
+import comp
 import stock_fund
 import bond_fund
 import mixed_fund
 
-rptDate = '20161231'
+rptDate = '20170630'
+
+def download_index_close(wind_code, start_date, end_date):
+    w.start()
+    data = w.wsd(wind_code, 'close', start_date, end_date)
+    return utils.wind2df(data)
 
 def update_fund_list(df, fname):
     df[['sec_name', 'wind_code']].to_excel(fname, index=False)
@@ -24,10 +30,14 @@ def update_fund_list(df, fname):
     data = w.wss(df['wind_code'].tolist(), "issue_date")
     temp = utils.wind2df(data)
     df['issue_date'] = temp['issue_date']
-    # 资产净值
+    # 资产规模
     data = w.wss(df['wind_code'].tolist(), "prt_netasset","rptDate=%s"%(rptDate))
     temp = utils.wind2df(data)
     df['netasset'] = temp['prt_netasset']
+    # 基金公司
+    data = w.wss(df['wind_code'].tolist(), 'fund_mgrcomp')
+    temp = utils.wind2df(data)
+    df['mgrcomp'] = temp['fund_mgrcomp']
     # 基金经理
     data = w.wss(df['wind_code'].tolist(), "fund_fundmanager")
     temp = utils.wind2df(data)
@@ -65,10 +75,7 @@ def update_mixed_list():
 
 def update_nav(ticker):
     w.start()
-    if datetime.datetime.now().hour < 15:
-        today = datetime.datetime.today() - datetime.timedelta(1)
-    else:
-        today = datetime.datetime.today()
+    today = datetime.datetime.today() - datetime.timedelta(1)
     fname = '%s/history/%s.xlsx'%(const.DATA_DIR, ticker)
     if not os.path.exists(fname):
         utils.down_historical_nav(ticker)
@@ -77,18 +84,69 @@ def update_nav(ticker):
         df.to_excel(fname)
         return
     old_df = pd.read_excel(fname, index_col=0)
+    old_df = old_df.drop(old_df.index[-4:])
+    # old_df.index = old_df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    # old_df.index = pd.to_datetime(old_df.index)
+    if 'outmessage' in old_df.columns:
+        del old_df['outmessage']
     last_day = old_df.index[-1]
     days = (today - last_day).days - 1
     if days < 0:
         return
     data = w.wsd(ticker, "NAV_adj", "ED-%dD"%(days), today, "")
     df = utils.wind2df(data)
+    if 'outmessage' in df.columns:
+        old_df.to_excel(fname)
+        return
     for col in old_df.columns:
         if col not in df.columns:
             df[col] = 0
     df = old_df.append(df)
+    df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    df.index = pd.to_datetime(df.index)
     df = utils.get_historical_return(df)
     df.to_excel(fname)
+
+def update_season_rpt(ticker, rptdates):
+    fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
+    if not os.path.exists(fname):
+        utils.download_season_rpt(ticker, rptdates)
+    else:
+        df = pd.read_excel(fname, index_col=0)
+        last_date = df.index[-1]
+        rptdates = [rptdate for rptdate in rptdates if rptdate > last_date]
+        if len(rptdates) > 0:
+            new_df = utils.download_season_rpt(ticker, rptdates)
+            if not pd.isnull(new_df):
+                df = df.append(new_df)
+                df.to_excel(fname)
+
+def update_stock_season_rpt():
+    stock_df = stock_fund.get_stock_fund()
+    rptdates = utils.generate_rptdate('2010-01-01')
+    rptdates = pd.to_datetime(rptdates, format='%Y-%m-%d')
+    for ticker, issue_date in zip(stock_df['wind_code'], stock_df['issue_date']):
+        print('updating %s season report...'%(ticker))
+        fund_rptdates = [rptdate for rptdate in rptdates if rptdate > issue_date]
+        update_season_rpt(ticker, fund_rptdates)
+
+def update_mixed_season_rpt():
+    mixed_df = mixed_fund.get_mixed_fund()
+    rptdates = utils.generate_rptdate('2010-01-01')
+    rptdates = pd.to_datetime(rptdates, format='%Y-%m-%d')
+    for ticker, issue_date in zip(mixed_df['wind_code'], mixed_df['issue_date']):
+        print('updating %s season report...'%(ticker))
+        fund_rptdates = [rptdate for rptdate in rptdates if rptdate > issue_date]
+        update_season_rpt(ticker, fund_rptdates)
+
+def update_bond_season_rpt():
+    bond_df = bond_fund.get_bond_fund()
+    rptdates = utils.generate_rptdate('2010-01-01')
+    rptdates = pd.to_datetime(rptdates, format='%Y-%m-%d')
+    for ticker, issue_date in zip(bond_df['wind_code'], bond_df['issue_date']):
+        print('updating %s season report...'%(ticker))
+        fund_rptdates = [rptdate for rptdate in rptdates if rptdate > issue_date]
+        update_season_rpt(ticker, fund_rptdates)
 
 def update_bond_data():
     bond_df = bond_fund.get_bond_fund()
@@ -111,6 +169,37 @@ def update_mixed_data():
         update_nav(ticker)
     mixed_fund.save_mixed_fund_panel()
 
+def update_index_data(wind_code):
+    fname = '%s/%s.xlsx'%(const.INDEX_HIS_DIR, wind_code)
+    if datetime.datetime.now().hour < 15:
+        end_date = (datetime.datetime.today() - datetime.timedelta(1)).strftime("%Y-%m-%d")
+    else:
+        end_date = datetime.datetime.today().strftime("%Y-%m-%d")
+    if os.path.exists(fname):
+        print('updating %s...'%(wind_code))
+        df = pd.read_excel(fname, index_col=0)
+        start_date = df.index[-1] + datetime.timedelta(1)
+        if start_date > datetime.datetime.strptime(end_date, "%Y-%m-%d"):
+            return
+        add_df = download_index_close(wind_code, start_date, end_date)
+        df = df.append(add_df)
+        df.to_excel(fname)
+    else:
+        print('downloding %s...'%(wind_code))
+        start_date = '2010-01-01'
+        df = download_index_close(wind_code, start_date, end_date)
+        df.to_excel(fname)
+
+def update_theme_data():
+    df = pd.read_excel(const.theme_file)
+    for wind_code in df[u'代码']:
+        update_index_data(wind_code)
+
+def update_concept_data():
+    df = pd.read_excel(const.concept_file)
+    for wind_code in df[u'代码']:
+        update_index_data(wind_code)
+
 if __name__ == '__main__':
     update_bond_data()
     update_stock_data()
@@ -118,4 +207,11 @@ if __name__ == '__main__':
     # update_stock_list()
     # update_bond_list()
     # update_mixed_list()
-    # update_nav('150094.OF')
+    # update_stock_season_rpt()
+    # update_mixed_season_rpt()
+    # update_bond_season_rpt()
+    comp.save_comp_dataframe()
+    comp.save_comp_rpt()
+    comp.get_all_comp_daily_return()
+    comp.get_all_comp_position()
+    comp.comp_analysis()

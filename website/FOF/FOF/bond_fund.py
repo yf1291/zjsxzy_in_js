@@ -41,7 +41,6 @@ def save_bond_fund_panel():
 
     for item in pnl.minor_axis:
         if item.endswith('return'):
-            continue
             print(item)
             df = pnl.minor_xs(item)
             df.to_pickle('%s/bond_%s.pkl'%(const.FOF_DIR, item))

@@ -4,11 +4,12 @@ import numpy as np
 
 import utils
 
-def factor_weight(df, 
-                  history_window=484, 
-                  ascending=False, 
-                  threshold=0.2, 
-                  frequency='D'):
+def factor_weight(df,
+                  history_window=484,
+                  ascending=False,
+                  threshold=0.2,
+                  frequency='D',
+                  relative=False):
     """
     根据因子筛选资产
 
@@ -17,7 +18,8 @@ def factor_weight(df,
     return: 根据因子选择出来的资产01矩阵
     """
     # 得到历史百分位
-    df = df.rolling(window=history_window).apply(lambda x: utils.rank_percentile(x))
+    if relative == True:
+        df = df.rolling(window=history_window).apply(lambda x: utils.rank_percentile(x))
     # 排序
     if frequency == 'D':
         rank_df = df.rank(axis=1, pct=True, ascending=ascending)
@@ -31,7 +33,7 @@ def factor_weight(df,
     rank_df[rank_df != 0] = 1
     weight_df = pd.DataFrame(columns=df.columns, index=df.index)
     weight_df.loc[rank_df.index] = rank_df
-    weight_df.iloc[0] = 0
+    # weight_df.iloc[0] = 0
     weight_df = weight_df.fillna(method='ffill')
     return weight_df
 
@@ -51,11 +53,11 @@ def calculate_return(weight_df, return_df):
     daily_return = (weight_df * return_df).sum(axis=1)
     return daily_return
 
-def factor_return(df, 
-                  return_df, 
-                  history_window=484, 
-                  ascending=False, 
-                  threshold=0.2, 
+def factor_return(df,
+                  return_df,
+                  history_window=484,
+                  ascending=False,
+                  threshold=0.2,
                   frequency='D'):
     """
     计算因子收益率
@@ -65,7 +67,7 @@ def factor_return(df,
 
     return: 因子的日收益率
     """
-    weight_df = factor_weight(df, history_window=history_window, 
+    weight_df = factor_weight(df, history_window=history_window,
                               ascending=ascending, threshold=threshold, frequency=frequency)
     # 等权分配
     weight_df = weight_df.div(weight_df.sum(axis=1), axis='index')

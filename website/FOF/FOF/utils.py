@@ -4,6 +4,7 @@ import pyfolio as pf
 from WindPy import w
 import pandas as pd
 import datetime
+import calendar
 import os
 
 import const
@@ -90,3 +91,43 @@ def calculate_empyrical(fund_type):
 
     fname = '%s/%s_empyrical.xlsx'%(const.FOF_DIR, fund_type)
     df.to_excel(fname)
+
+def download_season_rpt(ticker, rptdates):
+    '''
+    下载基金季度报告数据
+    '''
+    w.start()
+    columns = "prt_netasset,prt_stocktonav,prt_bondtonav,prt_cashtonav,prt_stocktoasset"
+    df = pd.DataFrame({}, index=rptdates, columns=columns.split(','))
+    for rptdate in rptdates:
+        data = w.wss(ticker, columns, 'rptDate=%s'%(rptdate.strftime('%Y-%m-%d')))
+        data = [val[0] for val in data.Data]
+        df.loc[rptdate] = data
+    fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
+    df.to_excel(fname)
+
+def generate_rptdate(start_date):
+    """
+    生成报告期
+    """
+    start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+    years = range(2010, 2018)
+    months = [3, 6, 9, 12]
+    rptdates = []
+    today = datetime.datetime.today()
+    for year in years:
+        for month in months:
+            day = calendar.monthrange(year, month)[1]
+            if datetime.datetime(year, month, day) < start_date:
+                continue
+            if datetime.datetime(year, month, day) > today:
+                break
+            rptdates.append('%d-%02d-%02d'%(year, month, day))
+    return rptdates
+
+def get_all_funds():
+    stock_df = pd.read_excel(const.stock_funds_file)
+    mixed_df = pd.read_excel(const.mixed_funds_file)
+    bond_df = pd.read_excel(const.bond_funds_files)
+    all_df = stock_df.append(mixed_df).append(bond_df)
+    return all_df

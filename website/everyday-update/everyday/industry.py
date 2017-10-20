@@ -74,3 +74,5 @@ def main():
 if __name__ == '__main__':
     # download_data(codes, fields)
     main()
+    # df = get_dataframe()
+    # print df

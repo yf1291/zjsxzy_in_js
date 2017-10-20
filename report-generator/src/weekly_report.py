@@ -85,6 +85,8 @@ def fund_position(df):
         name = df.loc[index, u'名称']
         ftype = df.loc[index, 'type']
         percent = df.loc[index, col_name]
+        if pd.isnull(name) or pd.isnull(ftype) or pd.isnull(percent):
+            break
         if utils.hk_fund_name(name):
             hk += percent
         elif utils.gold_fund_name(name):
@@ -199,7 +201,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20170814', u'稳进5号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20171016', u'稳进7号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']

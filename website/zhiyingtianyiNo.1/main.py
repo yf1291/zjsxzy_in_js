@@ -118,11 +118,10 @@ update_button = Button(label=u"更新数据", width=300, button_type="success")
 update_row = row(update_time_text, update_button)
 update_button.on_click(update_data)
 text = [TextInput(value="", title=name, width=165) for name in portfolio_selection]
-text_row_1 = row(text[0], text[1], text[2], text[3], text[4], text[5], text[6])
-text_row_2 = row(text[7], text[8], text[9], text[10])
+text_row_1 = row(text[0], text[1], text[2])
 
 controls = widgetbox(time_text, portfolio_select, button)
 table = widgetbox(data_table)
 
-curdoc().add_root(column(row(controls, table), plot_value, update_row, text_row_1, text_row_2))
+curdoc().add_root(column(row(controls, table), plot_value, update_row, text_row_1))
 curdoc().title = u"智盈添易一号"

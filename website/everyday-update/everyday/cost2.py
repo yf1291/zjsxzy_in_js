@@ -141,7 +141,7 @@ def merge_data(index_code):
         df.to_excel(fname)
 
 if __name__ == '__main__':
-    # get_wind_data_all('881001.WI', '2011-01-01', '2011-03-31')
+    # get_wind_data_all('881001.WI', '2010-04-01', '2010-06-30')
 
-    # merge_data('881001.WI')
+    merge_data('881001.WI')
     get_history_turnover()

@@ -4,7 +4,7 @@ import pandas as pd
 import const
 
 def get_dataframe():
-    fname = '%s/price.pkl'%(const.DATA_DIR)
+    fname = 'D:/price.pkl'%(const.DATA_DIR)
     pnl = pd.read_pickle(fname)
     pnl.ix[:, :, 'year'] = pnl.minor_xs('close').rolling(window=242).mean()
     price = pnl.minor_xs('close') > pnl.minor_xs('year')

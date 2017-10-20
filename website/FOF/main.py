@@ -15,6 +15,7 @@ import FOF.mixed_fund as mixed_fund
 import FOF.const as const
 import FOF.data as data
 import FOF.correlation as correlation
+import FOF.comp as comp
 
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox, column
@@ -23,6 +24,11 @@ from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Sele
 from bokeh.plotting import figure
 
 DATA_DIR = 'C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/website/FOF/data'
+COMP_RET_FILE = '%s/comp_ret.xlsx'%(const.FOF_DIR)
+COMP_POS_FILE = '%s/comp_position.xlsx'%(const.FOF_DIR)
+ret_df = pd.read_excel(COMP_RET_FILE)
+pos_df = pd.read_excel(COMP_POS_FILE)
+comps = ret_df.columns.tolist()
 
 invest_type_selections = [u'股票型基金', u'债券型基金', u'混合型基金']
 bond_type_selections = [u'全部',
@@ -54,6 +60,9 @@ source_nav = ColumnDataSource(data=dict(date=[], nav=[]))
 source_return = ColumnDataSource(data=dict(date=[], ret=[]))
 source_table = ColumnDataSource(data=dict())
 source_cor = ColumnDataSource(data=dict(days=[], cor=[], max=[], min=[], median=[], percent_75=[], percent_25=[]))
+source_comp_nav = ColumnDataSource(data=dict(date=[], nav=[]))
+source_comp_position = ColumnDataSource(data=dict(date=[], pos=[]))
+source_comp_table = ColumnDataSource(data=dict())
 
 def scale_filter(df):
     if scale_select.value == u'全部':
@@ -189,6 +198,24 @@ def update_correlation():
     plot_correlation.title.text = fund1 + u"与" + fund2 + u"相关性锥"
     source_cor.data = source_cor.from_df(data_df)
 
+def update_comp_table():
+    print('analysing...')
+    comp.comp_analysis(comp_start_time_text.value)
+    df = pd.read_excel('%s/comp_analysis.xlsx'%(const.FOF_DIR), index_col=0)
+    df['name'] = df.index.map(lambda x: x.rstrip(u'管理有限公司'))
+    df.index = range(df.shape[0])
+    source_comp_table.data = source_comp_table.from_df(df)
+
+def update_comp():
+    plot_comp_nav.title.text = comp_select.value + u'基金净值'
+    plot_comp_pos.title.text = comp_select.value + u'股票仓位'
+    ret = ret_df[comp_select.value]
+    acc_ret = (1 + ret).cumprod()
+    acc_ret = acc_ret[acc_ret != 1]
+    pos = pos_df[comp_select.value]
+    source_comp_nav.data = {'date': acc_ret.index, 'nav': acc_ret.values}
+    source_comp_position.data = {'date': pos.index, 'pos': pos.values}
+
 invtype1_select = Select(value=invest_type_selections[0], title=u'基金一级投资分类', width=200, options=invest_type_selections)
 invtype1_select.on_change('value', lambda attr, old, new: update_inputs())
 invtype2_select = Select(value=bond_type_selections[0], title=u'基金二级投资分类', width=200, options=bond_type_selections)
@@ -201,6 +228,8 @@ update_button = Button(label=u'更新数据', button_type='success', width=200)
 update_button.on_click(update_new_data)
 fund_text = TextInput(value='000088.OF', title=u'基金Wind代码', width=200)
 fund_text.on_change('value', lambda attr, old, new: update_data())
+comp_select = Select(value=u'嘉实基金管理有限公司', title=u'基金公司', width=200, options=comps)
+comp_select.on_change('value', lambda attr, old, new: update_comp())
 
 columns = [
     TableColumn(field='sec_name', title=u'基金简称'),
@@ -214,6 +243,14 @@ columns = [
     TableColumn(field='max percentage date', title=u'获得最好业绩日期')
 ]
 data_table = DataTable(source=source_table, columns=columns, width=800)
+comp_columns = [
+    TableColumn(field='name', title=u'基金公司'),
+    TableColumn(field='ret', title=u'区间回报', formatter=NumberFormatter(format='0.00%')),
+    TableColumn(field='vol', title=u'波动率', formatter=NumberFormatter(format='0.00%')),
+    TableColumn(field='beta', title='Beta', formatter=NumberFormatter(format='0.00')),
+    TableColumn(field='pos', title=u'仓位变化', formatter=NumberFormatter(format='0.00%'))
+]
+comp_data_table = DataTable(source=source_comp_table, columns=comp_columns, width=900)
 
 tools = "pan,wheel_zoom,box_select,reset"
 plot_nav = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
@@ -234,6 +271,8 @@ fund2_text = TextInput(value='070013.OF', title=u'基金2Wind代码', width=200)
 corr_button = Button(label=u"计算相关性", width=200, button_type="success")
 corr_button.on_click(update_correlation)
 corr_col = column(fund1_text, fund2_text, corr_button)
+comp_start_time_text = TextInput(value='2017-07-01', title=u'开始时间', width=200)
+comp_start_time_text.on_change('value', lambda attr, old, new: update_comp_table())
 
 plot_correlation = figure(plot_height=400, plot_width=1000, tools=tools)
 plot_correlation.yaxis.formatter = NumeralTickFormatter(format="0.00%")
@@ -247,12 +286,27 @@ plot_correlation.line('days', 'median', source=source_cor, line_width=2, color='
 plot_correlation.line('days', 'percent_25', source=source_cor, line_width=2, color='#33FFCC', legend='1/4')
 plot_correlation.line('days', 'min', source=source_cor, line_width=2, color='#33FF66', legend='Min')
 
+plot_comp_nav = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_comp_nav.line('date', 'nav', source=source_comp_nav, line_width=3, line_alpha=0.6)
+plot_comp_nav.title.text_font_size = "15pt"
+plot_comp_nav.yaxis.minor_tick_line_color = None
+plot_comp_nav.title.text_font = "Microsoft YaHei"
+
+plot_comp_pos = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_comp_pos.line('date', 'pos', source=source_comp_position, line_width=3, line_alpha=0.6)
+plot_comp_pos.yaxis.minor_tick_line_color = None
+plot_comp_pos.title.text_font_size = '15pt'
+plot_comp_pos.title.text_font = 'Microsoft Yahei'
+
 inputs = widgetbox(update_button, invtype1_select, invtype2_select, scale_select, time_select, fund_button, fund_text)
 table = widgetbox(data_table)
 update_inputs()
 update_data()
 update_correlation()
+update_comp()
+update_comp_table()
 select_fund()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, plot_return, corr_col, plot_correlation))
+curdoc().add_root(column(row(inputs, table), plot_nav, plot_return, corr_col, plot_correlation,
+                         widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
 curdoc().title = u'基金筛选'

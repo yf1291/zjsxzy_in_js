@@ -20,7 +20,6 @@ ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "CA.LME": u"LME铜",
                 "VIX.GI": u"隐含波动率指数"}
 
-w.start()
 
 def wind2df(raw_data):
     dic = {}
@@ -33,6 +32,7 @@ def download_data(symbol,
             start_date="2010-01-01",
             end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
     print start_date, end_date
+    w.start()
     raw_data = w.wsd(symbol, "close", beginTime=start_date, endTime=end_date)
     dic = {'date': raw_data.Times}
     for data, field in zip(raw_data.Data, raw_data.Fields):
@@ -51,6 +51,7 @@ def download_all(symbols,
 
 def get_component(symbols,
                   date=datetime.datetime.today().strftime("%Y-%m-%d")):
+    w.start()
     data = w.wset("sectorconstituent","date=%s;windcode=%s"%(date, symbols))
     df = wind2df(data)
     df = df[["sec_name", "wind_code"]]
@@ -74,16 +75,37 @@ def column_append(ticker,
     df = old_df.join(df)
     df.to_excel(fname)
 
+def get_stock_information():
+    w.start()
+    df = pd.read_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
+    if 'turnover' not in df.columns:
+        df['turnover'] = df['amt'] / df['mkt_freeshares']
+    today = datetime.datetime.today().strftime('%Y%m%d')
+    if 'industry' not in df.columns:
+        data = w.wss(df.index.tolist(), "industry_citic","tradeDate=%s;industryType=4"%(today))
+        df['industry'] = data.Data[0]
+    if 'sec_name' not in df.columns:
+        data = w.wss(df.index.tolist(), 'sec_name')
+        df['sec_name'] = data.Data[0]
+    df.to_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
+
 def get_stock_price_panel():
-    files = [f for f in os.listdir(const.STOCK_DIR)]
+    # files = [f for f in os.listdir(const.STOCK_DIR)]
+    files = [f.rstrip('.xlsx') for f in os.listdir(const.STOCK_DIR)]
+    columns = ['amt', 'volume', 'mkt_freeshares']
     dic = {}
-    shape = 0
+    vdf = pd.DataFrame({}, columns=columns, index=files)
     for f in files:
-        fname = '%s/%s'%(const.STOCK_DIR, f)
+        fname = '%s/%s.xlsx'%(const.STOCK_DIR, f)
         df = pd.read_excel(fname, index_col=0)
-        dic[f[:9]] = df[['close', 'mkt_freeshares']]
+        dic[f] = df[['close', 'mkt_freeshares']]
+        vdf.loc[f, :] = df[columns].iloc[-1]
     pnl = pd.Panel(dic)
-    pnl.to_pickle('%s/price.pkl'%(const.DATA_DIR))
+    print pnl.major_axis.shape
+    pnl.to_pickle('D:/Data/price.pkl')
+    vdf = vdf.sort_values('volume', ascending=False).head(n=50)
+    vdf.to_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
+    get_stock_information()
 
 def main():
     get_stock_price_panel()

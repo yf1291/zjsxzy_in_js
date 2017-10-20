@@ -26,10 +26,11 @@ def add_row(date):
         fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
         df = pd.read_excel(fname, index_col=0)
         add_df = everyday.loc[code].to_frame().transpose()
-        add_df['date'] = datetime.datetime.strptime(date, '%Y-%m-%d') + datetime.timedelta(0,0.005)
         add_df.set_index('date', inplace=True)
         df = df.append(add_df)
         print df.tail()
+        df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+        df.index = pd.to_datetime(df.index)
         df.to_excel(fname)
 
 def add_column(field):
@@ -60,8 +61,12 @@ def append_to_old_excel(code):
     """
     把最新的到今天/昨天的数据加入到旧的表格中
     """
+    print('updating %s...'%(code))
     fname = "%s/%s.xlsx"%(const.STOCK_DIR, code)
     df = pd.read_excel(fname, index_col=0)
+    # df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    # df.index = pd.to_datetime(df.index)
+    # df.to_excel(fname)
 
     start_date = (df.index[-1] + datetime.timedelta(1)).strftime("%Y-%m-%d")
     if datetime.datetime.now().hour < 15:
@@ -74,14 +79,15 @@ def append_to_old_excel(code):
     add_df = get_wind_data(code, start_date, end_date)
     if 'outmessage' in add_df.columns:
         return
-    print("updating %s"%(code))
     # print add_df
     add_df["turnover"] = add_df["amt"] / add_df["mkt_freeshares"]
 
     df = df.append(add_df)
+    df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    df.index = pd.to_datetime(df.index)
     df.to_excel(fname)
 
-def update_all(index_code=None, start_date="2011-07-01",
+def update_all(index_code=None, start_date="2010-04-01",
                      end_date=(datetime.datetime.today()-datetime.timedelta(1)).strftime("%Y-%m-%d")):
     if index_code == None:
         # 更新文件夹中所有
@@ -96,6 +102,8 @@ def update_all(index_code=None, start_date="2011-07-01",
             print("downloding %s..."%(code))
             df = get_wind_data(code, start_date, end_date)
             df["turnover"] = df["amt"] / df["mkt_freeshares"] # 计算换手率
+            df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+            df.index = pd.to_datetime(df.index)
             df.to_excel(fname)
 
 def convert_cost(df, stock=None):
@@ -114,7 +122,17 @@ def convert_cost(df, stock=None):
         # 在原有文件上增加新数据
         fname = "%s/%s"%(const.BY_STOCK_DIR, stock)
         old_df = pd.read_excel(fname, index_col=0)
-        if old_df.index[-1] >= df.index[-1]:
+        '''
+        if df.shape[0] != old_df.shape[0]:
+            print stock
+            return old_df
+        else:
+            old_df.index = old_df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+            old_df.index = pd.to_datetime(old_df.index)
+            old_df.to_excel(fname)
+            return old_df
+        '''
+        if old_df.index[-1] == df.index[-1]:
             return old_df
         df.loc[:, "turnover days"] = old_df["turnover days"]
         df.loc[:, "avg cost"] = old_df["avg cost"]
@@ -178,6 +196,8 @@ def get_history_turnover(index_code=None):
         else:
             print("processing %s..."%(stock))
             df = convert_cost(df)
+        df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+        df.index = pd.to_datetime(df.index)
         df.to_excel("%s/%s"%(const.BY_STOCK_DIR, stock))
 
 def get_all_by_stock_panel(files):
@@ -191,6 +211,8 @@ def get_all_by_stock_panel(files):
         df = pd.read_excel(fname, index_col=0)
         if 'current return' not in df.columns:
             df['current return'] = (df['close'] - df['avg cost']) / df['avg cost']
+            df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+            df.index = pd.to_datetime(df.index)
             df.to_excel(fname)
         df.index = pd.to_datetime(df.index)
         dic[stock[:-5]] = df[['current return', 'turnover days', 'profit percentage']]
@@ -279,6 +301,8 @@ def cal_market_cost(index_code=None):
             market_df.loc[date, "skewness"] = skewness
             market_df.loc[date, "kurtosis"] = kurtosis
     """
+    market_df.index = market_df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    market_df.index = pd.to_datetime(market_df.index)
     market_df.to_excel(fname)
     return market_df
 
@@ -307,6 +331,8 @@ def test():
         fname = '%s/%s'%(const.BY_STOCK_DIR, f)
         df = pd.read_excel(fname, index_col=0)
         df["current return"] = (df["close"] - df["avg cost"]) / df["avg cost"]
+        df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+        df.index = pd.to_datetime(df.index)
         df.to_excel(fname)
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from bokeh.io import curdoc
 from bokeh.charts import Bar
 from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource, NumeralTickFormatter
-from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button
+from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button, NumberFormatter
 from bokeh.plotting import figure
 from bokeh.palettes import Spectral9
 
@@ -78,7 +78,7 @@ source_price = ColumnDataSource(data=dict(date=[], close=[]))
 source_sharpe = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], text=[], sharpe=[], color=[], text_pos=[]))
 source_vol = ColumnDataSource(data=dict(days=[], vol=[], max=[], min=[], median=[], percent_75=[], percent_25=[]))
 source_cor = ColumnDataSource(data=dict(days=[], cor=[], max=[], min=[], median=[], percent_75=[], percent_25=[]))
-source_mom = ColumnDataSource(data=dict(date=[], mom5=[], mom20=[], mom60=[], mom40=[]))
+source_mom = ColumnDataSource(data=dict(date=[], mom20=[], mom60=[], mom121=[], mom242=[]))
 source_turnover_cost = ColumnDataSource(data=dict(date=[], cost=[], profit=[], mean=[], zero=[], prof_mean=[], prof_50=[]))
 source_turnover_cost_text = ColumnDataSource(data=dict(text_x=[], text_y=[], text=[], prof_text_y=[], prof_text=[]))
 source_consistency = ColumnDataSource(data=dict(date=[], con60=[]))
@@ -88,6 +88,7 @@ source_liquidity_risk = ColumnDataSource(data=dict(date=[], risk=[]))
 source_mean_line = ColumnDataSource(data=dict(date=[], quarter=[], year=[]))
 source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], tdays10=[]))
 source_concentration = ColumnDataSource(data=dict(date=[], concentration=[], price=[]))
+source_volume_table = ColumnDataSource(data=dict())
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -255,7 +256,6 @@ def update_liquidity_risk():
     fname = '%s/amihud_liquidity.xlsx'%(const.DATA_DIR)
     df = pd.read_excel(fname)
     col_name = '%s_%s'%(DEPARTMENT_ENG_NAME[DEPARTMENT_REV_NAME[index_select.value]], liquidity_select.value.lower())
-    print col_name
     source_liquidity_risk.data = {'date': df.index,
                                   'risk': df[col_name]}
 
@@ -274,6 +274,16 @@ def update_concentration():
     data_df['date'] = data_df.index
     source_concentration.data = source_concentration.from_df(data_df)
 
+def update_volume_table():
+    df = pd.read_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
+    source_volume_table.data = {
+        'sec_name': df['sec_name'],
+        'wind_code': df.index,
+        'volume': df['volume'],
+        'turnover': df['turnover'],
+        'industry': df['industry'],
+    }
+
 def update_all():
     update_statistics()
     update_data()
@@ -282,9 +292,9 @@ def update_all():
     update_cost()
     update_liquidity()
     update_liquidity_risk()
-    update_mean_line()
+    # update_mean_line()
     update_concentration()
-
+    update_volume_table()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -305,6 +315,16 @@ liquidity_select = Select(value='Corwin and Schultz', title=u'选择流动性风
 liquidity_select.on_change('value', lambda attr, old, new: update_liquidity_risk())
 index_select = Select(value=u'万得全A', title=u'选择指数', width=300, options=index_selections)
 index_select.on_change('value', lambda attr, old, new: update_liquidity_risk())
+volume_columns = [
+    TableColumn(field='sec_name', title=u'证券简称'),
+    TableColumn(field='wind_code', title=u'证券代码'),
+    TableColumn(field='volume', title=u'成交量', formatter=NumberFormatter(format='$0,0.00')),
+    TableColumn(field='turnover', title=u'换手率', formatter=NumberFormatter(format='0.00%')),
+    TableColumn(field='industry', title=u'证券行业'),
+]
+volume_data_table = DataTable(source=source_volume_table, columns=volume_columns, width=1000)
+# volume_data_table.title.text_font_size = 'Microsoft YaHei'
+# volume_data_table.title = u'成交量Top50股票列表'
 
 tools = "pan,wheel_zoom,box_select,reset"
 plot_price = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
@@ -317,10 +337,10 @@ plot_mom.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_mom.title.text_font_size = "15pt"
 plot_mom.yaxis.minor_tick_line_color = None
 plot_mom.title.text_font = "Microsoft YaHei"
-plot_mom.line('date', 'mom5', source=source_mom, line_width=2, color='red', legend=u'5日动量')
-plot_mom.line('date', 'mom20', source=source_mom, line_width=2, color='yellow', legend=u'一个月动量')
-plot_mom.line('date', 'mom40', source=source_mom, line_width=2, color='green', legend=u'两个月动量')
-plot_mom.line('date', 'mom60', source=source_mom, line_width=2, color='blue', legend=u'三个月动量')
+plot_mom.line('date', 'mom20', source=source_mom, line_width=2, color='red', legend=u'一个月动量')
+plot_mom.line('date', 'mom60', source=source_mom, line_width=2, color='yellow', legend=u'一个季度动量')
+plot_mom.line('date', 'mom121', source=source_mom, line_width=2, color='green', legend=u'半年动量')
+plot_mom.line('date', 'mom242', source=source_mom, line_width=2, color='blue', legend=u'一年动量')
 
 plot_vol = figure(plot_height=400, plot_width=1000, tools=tools)
 plot_vol.yaxis.formatter = NumeralTickFormatter(format="0.00%")
@@ -388,13 +408,6 @@ plot_liquidity.yaxis.minor_tick_line_color = None
 plot_liquidity.title.text_font = "Microsoft YaHei"
 plot_liquidity.title.text = u'881001.WI 流动性指标（自相关系数）：自相关系数越低，流动性越好'
 plot_liquidity.line('date', 'liquidity', source=source_liquidity, line_width=2)
-# plot_liquidity.vbar(x='date', top='liquidity', bottom=0, width=1, source=source_liquidity)
-# plot_liquidity.line('date', 'wdqa', source=source_liquidity, line_width=2, color='#002EB8', legend=u'万得全A')
-# plot_liquidity.line('date', 'sz50', source=source_liquidity, line_width=2, color='#002EB8', legend=u'上证50')
-# plot_liquidity.line('date', 'hs300', source=source_liquidity, line_width=2, color='#003DF5', legend=u'沪深300')
-# plot_liquidity.line('date', 'zz500', source=source_liquidity, line_width=2, color='#33CCFF', legend=u'中证500')
-# plot_liquidity.line('date', 'zxb', source=source_liquidity, line_width=2, color='#33FFCC', legend=u'中小板')
-# plot_liquidity.line('date', 'cyb', source=source_liquidity, line_width=2, color='#33FF66', legend=u'创业板')
 
 plot_liquidity_risk = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_liquidity_risk.yaxis.minor_tick_line_color = None
@@ -403,6 +416,7 @@ plot_liquidity_risk.title.text_font = 'Microsoft Yahei'
 plot_liquidity_risk.title.text = u'股票流动性风险'
 plot_liquidity_risk.vbar(x='date', top='risk', bottom=0, width=1, source=source_liquidity_risk)
 
+'''
 plot_mean_line = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_mean_line.title.text_font_size = '15pt'
 plot_mean_line.title.text_font = 'Microsoft YaHei'
@@ -412,6 +426,7 @@ plot_mean_line.yaxis.formatter = NumeralTickFormatter(format='0.00%')
 plot_mean_line.yaxis.axis_label = u'percentage'
 plot_mean_line.line('date', 'quarter', source=source_mean_line, line_width=3, color='#002EB8', legend=u'季度线')
 plot_mean_line.line('date', 'year', source=source_mean_line, line_width=3, color='#33FF66', legend=u'年线')
+'''
 
 plot_turnover_days = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_turnover_days.title.text_font_size = '15pt'
@@ -448,5 +463,5 @@ inputs = widgetbox(time_text, time_end_text, asset_select)
 curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation, plot_consistency,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
-                         plot_concentration, plot_mean_line, plot_blank))
+                         plot_concentration, volume_data_table, plot_blank))
 curdoc().title = u"每日资产总结"
