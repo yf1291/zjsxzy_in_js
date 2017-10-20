@@ -5,7 +5,7 @@ import os
 import time
 
 BASE_URL = 'http://jhsjk.people.cn/article'
-START_ID = 25344624
+START_ID = 24910000
 DATA_DIR = 'D:Data/xjp'
 
 def crawl(start_id):
