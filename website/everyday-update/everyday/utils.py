@@ -1,4 +1,4 @@
-import pyfolio as pf
+import empyrical
 from WindPy import w
 import numpy as np
 import pandas as pd
@@ -27,7 +27,7 @@ def get_money_fund_daily_return(start_date, end_date):
     return df['return'].dropna()
 
 def get_sharpe_ratio(daily_return):
-    sharpe_ratio = pf.empyrical.sharpe_ratio(daily_return)
+    sharpe_ratio = empyrical.sharpe_ratio(daily_return)
     # return sharpe_ratio
     start_date = daily_return.index[0]
     end_date = daily_return.index[-1]

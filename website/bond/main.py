@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from os.path import dirname, join
 import os
 import pandas as pd

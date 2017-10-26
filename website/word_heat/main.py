@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import numpy as np
 import pandas as pd
 import datetime
@@ -16,7 +14,7 @@ from bokeh.models import ColumnDataSource, CustomJS, NumberFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button
 from bokeh.plotting import figure
 
-DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/data/asset-class"
+DATA_DIR = "D:/workspace/data/asset-class"
 
 asset_files = [f for f in os.listdir(const.ASSET_DIR) if f.endswith('.csv')]
 assets = ['word'] + [a[:-4] for a in asset_files if not a.startswith('H11025')]

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-import pyfolio as pf
+import empyrical
 from WindPy import w
 import pandas as pd
 import datetime
@@ -39,10 +39,10 @@ def get_statistics(ticker, end_date, k):
     df = df[df.index >= df.index[-k]]
     df.loc[:, 'return'] = df.loc[:, 'nav_adj'].pct_change()
     returns = (df.ix[-1, 'nav_adj'] - df.ix[0, 'nav_adj']) / df.ix[0, 'nav_adj']
-    volatility = pf.empyrical.annual_volatility(df['return'])
-    max_drawdown = pf.empyrical.max_drawdown(df['return'])
-    sharpe = pf.empyrical.sharpe_ratio(df['return'])
-    calmar = pf.empyrical.calmar_ratio(df['return'])
+    volatility = empyrical.annual_volatility(df['return'])
+    max_drawdown = empyrical.max_drawdown(df['return'])
+    sharpe = empyrical.sharpe_ratio(df['return'])
+    calmar = empyrical.calmar_ratio(df['return'])
     return returns, volatility, max_drawdown, sharpe, calmar
 
 def get_historical_return(df):
@@ -87,7 +87,7 @@ def calculate_empyrical(fund_type):
     ret_df = pd.read_pickle(filename)
     # Omega Ratio
     df = pd.DataFrame(index=ret_df.columns)
-    df.loc[:, 'omega'] = ret_df.apply(lambda x: pf.empyrical.omega_ratio(x))
+    df.loc[:, 'omega'] = ret_df.apply(lambda x: empyrical.omega_ratio(x))
 
     fname = '%s/%s_empyrical.xlsx'%(const.FOF_DIR, fund_type)
     df.to_excel(fname)

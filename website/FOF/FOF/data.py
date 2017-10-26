@@ -200,6 +200,11 @@ def update_concept_data():
     for wind_code in df[u'代码']:
         update_index_data(wind_code)
 
+def update_sector_data():
+    df = pd.read_excel(const.sector_file)
+    for wind_code in df[u'代码']:
+        update_index_data(wind_code)
+
 if __name__ == '__main__':
     update_bond_data()
     update_stock_data()
@@ -215,3 +220,6 @@ if __name__ == '__main__':
     comp.get_all_comp_daily_return()
     comp.get_all_comp_position()
     comp.comp_analysis()
+    update_theme_data()
+    update_concept_data()
+    update_sector_data()

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import sys
 
-sys.path.append("C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/factor-investing/src/")
+sys.path.append("D:/workspace/zjsxzy_in_js/factor-investing/src/")
 
 import const
 

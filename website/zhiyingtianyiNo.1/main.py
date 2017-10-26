@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from os.path import dirname, join
 import os
 import pandas as pd
@@ -17,7 +15,7 @@ from bokeh.io import curdoc
 from bokeh.palettes import Spectral8
 
 # COLORS = Spectral8 + ["#053061", "#2166ac", "#4393c3", "#92c5de", "#d1e5f0", "#f7f7f7"]
-DATA_DIR = "C:/Users/jgtzsx01/Documents/sheet/zhiyingtianyi portfolio"
+DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
 ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
 
 portfolio_selection = [u"智盈添易一号第%d期"%(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if i not in const.exceptions]

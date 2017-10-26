@@ -4,9 +4,9 @@ import json
 import gensim
 import pandas as pd
 
-DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/data"
+DATA_DIR = "D:/workspace/data"
 WORD_COUNT_FILE = "%s/wallstreetcn_words/wallstreetcn_word_count.json"%(DATA_DIR)
-WALLSTCN_MODEL = "C:/Users/jgtzsx01/Documents/workspace/model/wallstreet_model"
+WALLSTCN_MODEL = "D:/workspace/model/wallstreet_model"
 ASSET_CLASS_DIR = "%s/asset-class"%(DATA_DIR)
 
 key_word = u"欧洲"

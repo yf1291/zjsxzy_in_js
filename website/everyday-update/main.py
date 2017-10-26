@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 import numpy as np
 import pandas as pd
 import datetime
@@ -62,8 +60,7 @@ INDUSTRY_NAME = {'CI005001.WI': u'石油石化', 'CI005002.WI': u'煤炭', 'CI00
                  'CI005022.WI': u'非银行金融', 'CI005023.WI': u'房地产', 'CI005024.WI': u'交通运输',
                  'CI005025.WI': u'电子元器件', 'CI005026.WI': u'通信', 'CI005027.WI': u'计算机',
                  'CI005028.WI': u'传媒', 'CI005029.WI': u'综合'}
-COLORS = Spectral9
-COLORS += ["#053061", "#2166ac", "#4393c3"] # "#92c5de", "#d1e5f0", "#f7f7f7", "#fddbc7", "#f4a582", "#d6604d", "#b2182b"]
+COLORS = Spectral9 + ["#053061", "#2166ac", "#4393c3"] # "#92c5de", "#d1e5f0", "#f7f7f7", "#fddbc7", "#f4a582", "#d6604d", "#b2182b"]
 ASSETS_NAME = {key: value for key, value in ASSETS_NAME.iteritems()}
 ASSETS_REV_NAME = {value: key for key, value in ASSETS_NAME.iteritems()}
 ASSETS_COLOR = {asset: COLORS[i] for i, asset in enumerate(ASSETS_NAME.values())}
@@ -87,7 +84,7 @@ source_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
 source_liquidity_risk = ColumnDataSource(data=dict(date=[], risk=[]))
 source_mean_line = ColumnDataSource(data=dict(date=[], quarter=[], year=[]))
 source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], tdays10=[]))
-source_concentration = ColumnDataSource(data=dict(date=[], concentration=[], price=[]))
+source_concentration = ColumnDataSource(data=dict(date=[], concentration=[]))
 source_volume_table = ColumnDataSource(data=dict())
 
 def update_title():
@@ -143,6 +140,11 @@ def update_statistics():
         dataframe.dropna(inplace=True)
         sharpe = utils.get_sharpe_ratio(dataframe['return'])
         top.append(sharpe)
+
+    # print top
+    # print bottom
+    # print text
+    # print color
 
     df = pd.DataFrame({"bottom": bottom, "top": top, "text": text,
                         "sharpe": ["%.2f"%(x) for x in top], 'color': color})
@@ -444,7 +446,6 @@ plot_concentration.title.text_font_size = '15pt'
 plot_concentration.title.text_font = 'Microsoft Yahei'
 plot_concentration.title.text = u'股票收益率集中性'
 plot_concentration.vbar(x='date', top='concentration', bottom=0, width=1, source=source_concentration)
-plot_concentration.line('date', 'price', source=source_concentration, color='red', line_width=1, legend=u'万得全A')
 
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 

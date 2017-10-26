@@ -1,4 +1,4 @@
-DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/website/vix/data"
+DATA_DIR = "D:/workspace/zjsxzy_in_js/website/vix/data"
 
 URLS = {
     'VXFXI': "http://www.cboe.com/publish/scheduledtask/mktdata/datahouse/vxfxidailyprices.csv",

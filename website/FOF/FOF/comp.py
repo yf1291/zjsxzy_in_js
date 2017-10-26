@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 import pandas as pd
-import pyfolio as pf
+import empyrical
 
 import os
 import const
@@ -118,8 +118,8 @@ def comp_analysis(start_date='2017-07-01'):
         series = comp_ret[c]
         series = series[series.index >= start_date]
         df.loc[c, 'ret'] = (1 + series).cumprod()[-1] - 1
-        df.loc[c, 'vol'] = pf.empyrical.annual_volatility(series)
-        df.loc[c, 'beta'] = pf.empyrical.beta(series, wseries)
+        df.loc[c, 'vol'] = empyrical.annual_volatility(series)
+        df.loc[c, 'beta'] = empyrical.beta(series, wseries)
         if comp_pos[c].shape[0] > 1 and comp_pos[c][-2] != 0:
             df.loc[c, 'pos'] = (comp_pos[c][-1] - comp_pos[c][-2]) / comp_pos[c][-2]
     df = df.sort_values('ret', ascending=False)

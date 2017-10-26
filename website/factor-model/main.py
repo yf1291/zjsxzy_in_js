@@ -8,7 +8,7 @@ import sys
 
 import utils
 import factor_analysis
-sys.path.append("C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/factor-investing/src/")
+sys.path.append("D:/workspace/zjsxzy_in_js/factor-investing/src/")
 import factors
 import const
 

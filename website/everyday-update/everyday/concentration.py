@@ -13,9 +13,11 @@ def get_concentration(k=25):
     pnl.ix[:, :, 'return sqr'] = pnl.minor_xs('return') ** 2
     # pnl.ix[:, :, 'weight'] = pnl.minor_xs('mkt_freeshares') / pnl.minor_xs('close')
     # n, m = pnl.shape[0], pnl.shape[1]
+    # print pnl.items.shape
 
     wdf = pd.read_excel('%s/881001_weight.xlsx'%(const.DATA_DIR), index_col=0)
-    wdf = wdf[wdf.index.map(lambda x: x in pnl.items)]
+    select_index = [x for x in wdf.index if x in pnl.items]
+    wdf = wdf.loc[select_index]
     wdf = wdf.sort_index()
 
     df = pd.read_csv('%s/881001.WI.csv'%(const.DATA_DIR), index_col=1)
@@ -28,9 +30,9 @@ def get_concentration(k=25):
                     # (pnl.minor_xs('return sqr') * (pnl.minor_xs('weight')**2)).sum(axis=1)
     concentration = (df['return']**2) * (wdf[u'权重']**2).sum() /\
                     pnl.minor_xs('return sqr').multiply(wdf[u'权重']**2, axis=1).sum(axis=1)
-    scaler = preprocessing.MinMaxScaler()
+    # print concentration
 
-    df = pd.DataFrame({'concentration': concentration, 'price': scaler.fit_transform(df['close'])}, index=df.index)
+    df = pd.DataFrame({'concentration': concentration}, index=df.index)
     df.to_excel('%s/concentration.xlsx'%(const.DATA_DIR))
 
 def get_dataframe():

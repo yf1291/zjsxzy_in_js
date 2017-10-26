@@ -2,12 +2,12 @@
 
 import pandas as pd
 import datetime
-import pyfolio as pf
+import empyrical
 import os
 
 import const
 
-DATA_DIR = "C:/Users/jgtzsx01/Documents/sheet/zhiyingtianyi portfolio"
+DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
 ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
 
 def merge_to_sheet(date):
@@ -49,10 +49,10 @@ def get_statistics(date):
         portfolio_name.append(u"智盈添易一号第%s期"%(asset))
         net_value.append(df.loc[df.index[-1], 'net value'])
         total_return.append(df.loc[df.index[-1], 'net value'] - 1)
-        annual_return.append(pf.empyrical.annual_return(df['return'].dropna()))
-        max_drawdown.append(pf.empyrical.max_drawdown(df['return'].dropna()))
-        sharpe.append(pf.empyrical.sharpe_ratio(df['return'].dropna()))
-        volatility.append(pf.empyrical.annual_volatility(df['return'].dropna()))
+        annual_return.append(empyrical.annual_return(df['return'].dropna()))
+        max_drawdown.append(empyrical.max_drawdown(df['return'].dropna()))
+        sharpe.append(empyrical.sharpe_ratio(df['return'].dropna()))
+        volatility.append(empyrical.annual_volatility(df['return'].dropna()))
         df = df[df.index >= datetime.datetime(2017, 1, 1)]
         start_value = df.loc[df.index[0], 'net value']
         end_value = df.loc[df.index[-1], 'net value']
