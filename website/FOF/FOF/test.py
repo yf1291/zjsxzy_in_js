@@ -1,3 +1,4 @@
+# encoding: utf-8
 import utils
 import data
 import pandas as pd
@@ -24,4 +25,7 @@ if __name__ == '__main__':
     # print data.download_index_close('884224.WI', '2017-09-01', '2017-10-10')
     # data.update_theme_data()
     # data.update_concept_data()
-    data.update_sector_data()
+    # data.update_sector_data()
+    # data.update_season_rpt('660002.OF', [pd.to_datetime('2017-09-30')])
+    ret = comp.get_comp_daily_return(u'华夏基金管理有限公司')
+    print ret[ret.index >= '2017-01-01']

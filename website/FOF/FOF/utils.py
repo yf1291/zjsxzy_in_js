@@ -79,6 +79,7 @@ def down_historical_nav(ticker):
     days = (pd.to_datetime(end_date, format='%Y-%m-%d') - start_date).days
     data = w.wsd(ticker, "NAV_adj", "ED-%dD"%(days), end_date, "")
     df = wind2df(data)
+    df.index = pd.to_datetime(df.index)
     df = df[df.index >= '2010-01-01']
     df.to_excel('%s/history/%s.xlsx'%(const.DATA_DIR, ticker))
 

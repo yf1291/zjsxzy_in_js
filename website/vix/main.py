@@ -30,7 +30,7 @@ def update_correlation():
     asset1 = const.REV_NAMES[asset_select.value]
     asset2 = const.REV_NAMES[asset_select2.value]
     df = correlation.get_dataframe(asset1, asset2)
-    source_cor.data = source_cor.from_df(df)
+    source_cor.data = {'date': df.index, 'cor': df['cor']}
     plot_cor.title.text = asset_select.value + " v.s. " + asset_select2.value
 
 def calculate_mean():

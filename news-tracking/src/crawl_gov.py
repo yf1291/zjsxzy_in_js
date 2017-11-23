@@ -16,10 +16,10 @@ def crawl_content(url):
     text = response.read()
     soup = BeautifulSoup(text, "html.parser")
 
-    title = soup.title.text
+    title = soup.title.text.replace(u'\xa0', '')
     title = title.split('_')[0]
     title = title.replace('"', '').replace('|', '').replace('/', '').replace(u'、', '').replace(u'？', '')
-    title = title.rstrip('\n').replace('\r', '')
+    title = title.replace('\n', ' ').replace('\r', '').replace('\t', ' ')
     date_source = soup.find(class_='pages-date')
     if date_source == None:
         return
@@ -41,17 +41,18 @@ def crawl_content(url):
     if os.path.exists(fname):
         return True
     try:
-        print date, title
+        print date, source, title
+        with open(fname, 'w') as f:
+            f.write(content.encode('utf-8'))
     except Exception as e:
-        pass
-    with open(fname, 'w') as f:
-        f.write(content.encode('utf-8'))
+        print date, source, title
     return False
 
 def crawl_sector(sector_name, update_mode=False):
     base_url = 'http://sousuo.gov.cn/column/%s'%(sector_name)
-    url_list = ['%s/%d.htm'%(base_url, i) for i in range(2000)]
+    url_list = ['%s/%d.htm'%(base_url, i) for i in range(0, 3000)]
     for list_url in url_list:
+        print('crawling sector %s with url %s'%(sector_name, list_url))
         conn = httplib.HTTPConnection("sousuo.gov.cn")
         conn.request('GET', list_url)
         response = conn.getresponse()
@@ -63,14 +64,15 @@ def crawl_sector(sector_name, update_mode=False):
         for li in article_list.findAll("li"):
             item = li.find('a')
             url, title = item.get('href'), item.text
+            # print url, title
             try:
                 downloaded = crawl_content(url)
             except Exception as e:
                 print(e)
+                print(url)
                 with open('./error.txt', 'a') as f:
                     f.write(url + '\n')
-                print(url)
-            if update_mode:
+            if update_mode and downloaded:
                 return
 
 def update():
@@ -87,6 +89,10 @@ def update():
     crawl_sector('30474', update_mode=True) # 部门
     crawl_sector('40048', update_mode=True) # 媒体
     crawl_sector('31421', update_mode=True) # 要闻
+    crawl_sector('40535', update_mode=True) # 数据快递
+    crawl_sector('40520', update_mode=True) # 地方数据
+    crawl_sector('40521', update_mode=True) # 数据解读
+    crawl_sector('30471', update_mode=True) # 中央有关文件
 
 def crawl():
     crawl_sector('30611') # 滚动
@@ -102,8 +108,13 @@ def crawl():
     crawl_sector('30474') # 部门
     crawl_sector('40048') # 媒体
     crawl_sector('31421') # 要闻
+    crawl_sector('40535') # 数据快递
+    crawl_sector('40520') # 地方数据
+    crawl_sector('40521') # 数据解读
+    crawl_sector('30722') # 数据要闻
+    crawl_sector('30471') # 中央有关文件
 
 if __name__ == '__main__':
-    # crawl()
-    update()
-    # crawl_content('http://www.gov.cn/xinwen/2017-04/14/content_5185566.htm')
+    crawl()
+    # update()
+    # crawl_content('http://www.gov.cn/xinwen/2017-10/21/content_5233563.htm')

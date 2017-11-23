@@ -6,5 +6,5 @@ WORD_HEAT_DIR = 'D:/workspace/zjsxzy_in_js/website/word_heat/data'
 WORD_COUNT_FILE = '%s/wallstreetcn_words/word_count.pkl'%(DATA_DIR)
 # TOTAL_WORD_COUNT_FILE = "%s/wallstreetcn_words/wallstreetcn_total_word_count.json"%(DATA_DIR)
 TOTAL_WORD_COUNT_FILE = "%s/wallstreetcn_words/total_word_count.pkl"%(DATA_DIR)
-WALLSTCN_MODEL = "D:/Documents/workspace/model/text.model"
+WALLSTCN_MODEL = "D:/workspace/model/text.model"
 ASSET_CLASS_DIR = "%s/asset-class"%(DATA_DIR)

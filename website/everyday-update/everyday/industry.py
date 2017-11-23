@@ -4,17 +4,19 @@ import numpy as np
 import datetime
 from WindPy import w
 from sklearn.decomposition import PCA
+import os
 
 import wind_data
 import utils
+import const
 
 codes = ['CI0050%02d.WI'%(i) for i in range(1, 30)]
-fields = 'close'
+fields = 'close,volume'
 INDEX_DIR = 'D:/Data/index'
 
 def download_data(codes,
                   fields,
-                  start_date='2012-01-01',
+                  start_date='2001-01-01',
                   end_date='2017-07-07'):
     for code in codes:
         print(code)
@@ -27,18 +29,23 @@ def append_data(codes,
     for code in codes:
         print(code)
         fname = '%s/%s.xlsx'%(INDEX_DIR, code)
-        old_df = pd.read_excel(fname, index_col=0)
-        start_date = old_df.index[-1] + datetime.timedelta(1)
         if datetime.datetime.now().hour < 15:
             end_date = datetime.datetime.today() - datetime.timedelta(1)
         else:
             end_date = datetime.datetime.today()
-        if start_date > end_date:
-            continue
+        if os.path.exists(fname):
+            old_df = pd.read_excel(fname, index_col=0)
+            start_date = old_df.index[-1] + datetime.timedelta(1)
+            if start_date > end_date:
+                continue
+            else:
+                data = w.wsd(code, fields, start_date, end_date)
+                df = wind_data.wind2df(data)
+                df = old_df.append(df)
+                df.to_excel(fname)
         else:
-            data = w.wsd(code, fields, start_date, end_date)
+            data = w.wsd(code, fields, '2001-01-01', end_date)
             df = wind_data.wind2df(data)
-            df = old_df.append(df)
             df.to_excel(fname)
 
 def get_panel():
@@ -59,6 +66,7 @@ def get_dataframe():
     pnl = get_panel()
     pnl.ix[:, :, 'return'] = pnl.minor_xs('close').pct_change()
     df = pnl.minor_xs('return')
+    print df.tail()
 
     rolled_df = utils.roll(df, 60)
     ratio = rolled_df.apply(lambda x: principal_ratio(x, 3))
@@ -74,5 +82,6 @@ def main():
 if __name__ == '__main__':
     # download_data(codes, fields)
     main()
-    # df = get_dataframe()
-    # print df
+    df = get_dataframe()
+    print df
+    df.to_excel('%s/consistency.xlsx'%(const.DATA_DIR))

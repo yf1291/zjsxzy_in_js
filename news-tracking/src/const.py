@@ -1,8 +1,14 @@
 # encoding: utf-8
-MOF_DIR = 'C:/Users/jgtzsx01/Documents/workspace/data/MOF'
+MOF_DIR = 'D:/workspace/data/MOF'
 GOV_DIR = 'D:/Data/gov'
-DATA_DIR = 'C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/news-tracking/data'
-WORK_DIR = 'C:/Users/jgtzsx01/Documents/workspace/data/'
+DATA_DIR = 'D:/workspace/zjsxzy_in_js/news-tracking/data'
+WORK_DIR = 'D:/workspace/data/'
+WALLSTCN_TEXT_FILE = '%s/wallstreetcn_text'%(WORK_DIR)
+WALLSTCN_DIR = '%s/wallstreetcn'%(WORK_DIR)
+WORD_DIR = u'D:/Data/词库'
+STOP_WORD_FILE = u'%s/stop_words_zh.txt'%(WORD_DIR)
+CAIJING_WORD_FILE = u'%s/THUOCL_caijing.txt'%(WORD_DIR)
+MYWORD_FILE = u'%s/my_word.txt'%(WORD_DIR)
 WORD_CNT_FILE = '%s/wallstreetcn_words/word_count.pkl'%(WORK_DIR)
 WORD_CNT_CHECKED_FILE = '%s/wallstreetcn_words/word_count_checked.txt'%(WORK_DIR)
 TOTAL_WORD_COUNT_FILE = "%s/wallstreetcn_words/total_word_count.pkl"%(WORK_DIR)

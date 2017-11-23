@@ -11,9 +11,6 @@ DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
 ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
 
 def merge_to_sheet(date):
-    zhiying_df = pd.read_csv(ZHIYING_FILE)
-    zhiying_df.index = pd.to_datetime(zhiying_df['date'], format="%Y/%m/%d")
-
     fname = "%s/%s.csv"%(DATA_DIR, date)
     if not os.path.exists(fname):
         print fname
@@ -21,20 +18,32 @@ def merge_to_sheet(date):
         return
 
     today_df = pd.read_csv(fname)
+    today_info = today_df.iloc[0]
+    today_info.index = today_info.index.map(lambda x: int(x))
     date = pd.to_datetime(date, format="%Y-%m-%d")
-    zhiying_df.ix[date] = [date.strftime("%Y/%m/%d")] + today_df.ix[0].tolist()
+    zhiying_df = pd.read_csv(ZHIYING_FILE)
+    zhiying_df.index = pd.to_datetime(zhiying_df['date'], format="%Y/%m/%d")
+    zhiying_df.loc[date] = [date.strftime("%Y/%m/%d")] + today_info[today_info.index < 24].tolist()
+    # print zhiying_df.dropna().tail()
     zhiying_df.to_csv(ZHIYING_FILE, index=False)
 
+    # 24期之后
+    zhiying_df = pd.read_excel(const.ZHIYING_FILE2, index_col=0)
+    zhiying_df.loc[date] = today_info[today_info.index >= 24].tolist()
+    # print zhiying_df.dropna().tail()
+    zhiying_df.to_excel(ZHIYING_FILE2)
+
 def get_statistics(date):
-    zhiying_df = pd.read_csv(ZHIYING_FILE)
-    zhiying_df.index = pd.to_datetime(zhiying_df['date'], format='%Y/%m/%d')
+    end_date = datetime.datetime.strptime(date, "%Y-%m-%d")
     portfolio_name, net_value, year_return, annual_return, total_return, max_drawdown, sharpe, volatility = [], [], [], [], [], [], [], []
 
-    end_date = datetime.datetime.strptime(date, "%Y-%m-%d")
+    zhiying_df = pd.read_csv(const.ZHIYING_FILE)
+    zhiying_df.index = pd.to_datetime(zhiying_df['date'], format='%Y/%m/%d')
     zhiying_df = zhiying_df[zhiying_df.index <= end_date]
     if zhiying_df.shape[0] == 0:
         return
-    assets = assets = [unicode(x) for x in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if x not in const.exceptions]
+    assets = assets = [unicode(x) for x in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) \
+                       if ((x not in const.exceptions) and (x < 24))]
 
     for asset in assets:
         df = zhiying_df[[asset]]
@@ -45,6 +54,33 @@ def get_statistics(date):
 
         if df.index[-1] < end_date:
             return
+
+        portfolio_name.append(u"智盈添易一号第%s期"%(asset))
+        net_value.append(df.loc[df.index[-1], 'net value'])
+        total_return.append(df.loc[df.index[-1], 'net value'] - 1)
+        annual_return.append(empyrical.annual_return(df['return'].dropna()))
+        max_drawdown.append(empyrical.max_drawdown(df['return'].dropna()))
+        sharpe.append(empyrical.sharpe_ratio(df['return'].dropna()))
+        volatility.append(empyrical.annual_volatility(df['return'].dropna()))
+        df = df[df.index >= datetime.datetime(2017, 1, 1)]
+        start_value = df.loc[df.index[0], 'net value']
+        end_value = df.loc[df.index[-1], 'net value']
+        year_return.append((end_value-start_value)/start_value)
+
+    # 24期之后
+    assets = assets = [x for x in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) \
+                       if ((x not in const.exceptions) and (x >= 24))]
+
+    zhiying_df = pd.read_excel(const.ZHIYING_FILE2, index_col=0)
+    zhiying_df = zhiying_df[zhiying_df.index <= end_date]
+    if zhiying_df.shape[0] == 0:
+        return
+    for asset in assets:
+        df = zhiying_df[[asset]]
+        df = df.dropna()
+        df.loc[:, 'return'] = df[asset] / 100.
+        df.loc[:, 'net value'] = (1+df['return']).cumprod()
+        df.loc[df.index[0], 'net value'] = 1
 
         portfolio_name.append(u"智盈添易一号第%s期"%(asset))
         net_value.append(df.loc[df.index[-1], 'net value'])
@@ -83,5 +119,5 @@ def get_statistics(date):
     df = pd.read_excel('%s/%s.xlsx'%(DATA_DIR, date))
 
 if __name__ == "__main__":
-    # merge_to_sheet("2017-03-02")
-    get_statistics("2017-03-03")
+    merge_to_sheet("2017-11-03")
+    # get_statistics("2017-11-02")

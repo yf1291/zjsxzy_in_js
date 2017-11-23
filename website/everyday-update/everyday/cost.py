@@ -317,7 +317,9 @@ def main():
     # add_row('2017-06-14')
     # delete_old_files()
     get_history_turnover()
-    files = ['881001.WI', '399006.SZ', '399005.SZ', '000016.SH', '000905.SH', '000906.SH', '000300.SH']
+    files = ['881001.WI', '399006.SZ', '399005.SZ',
+             '000016.SH', '000905.SH', '000906.SH',
+             '000300.SH', '399550.SZ', 'HSCAIT.HI']
     for f in files:
         fname = '%s/%s.xlsx'%(const.DATA_DIR, f)
         if os.path.exists(fname):

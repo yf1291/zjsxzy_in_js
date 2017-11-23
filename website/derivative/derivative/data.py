@@ -22,6 +22,18 @@ def download_option_information(option_code, start_date, end_date):
     df = utils.wind2df(data)
     df.to_excel(fname)
 
+def append_option_column(option_code, col_name):
+    fname = '%s/%s.xlsx'%(const.OPTION_DIR, option_code)
+    if os.path.exists(fname):
+        df = pd.read_excel(fname, index_col=0)
+        if col_name.lower() in df.columns:
+            return
+        start_date, end_date = df.index[0].strftime('%Y-%m-%d'), df.index[-1].strftime('%Y-%m-%d')
+        data = w.wsd(option_code, col_name, start_date, end_date)
+        temp = utils.wind2df(data)
+        df[col_name.lower()] = temp[col_name]
+        df.to_excel(fname)
+
 def download_options_history(df):
     yesterday = datetime.datetime.today() - datetime.timedelta(1)
     for index in df.index:
@@ -35,3 +47,8 @@ def download_options_history(df):
         start_date = start_date.strftime('%Y-%m-%d')
         end_date = end_date.strftime('%Y-%m-%d')
         download_option_information(wind_code, start_date, end_date)
+
+def append_options_history(df):
+    for index in df.index:
+        wind_code = str(index) + '.SH'
+        append_option_column(wind_code, 'us_impliedvol')

@@ -12,7 +12,7 @@ import stock_fund
 import bond_fund
 import mixed_fund
 
-rptDate = '20170630'
+rptDate = '20170930'
 
 def download_index_close(wind_code, start_date, end_date):
     w.start()
@@ -114,12 +114,18 @@ def update_season_rpt(ticker, rptdates):
     else:
         df = pd.read_excel(fname, index_col=0)
         last_date = df.index[-1]
-        rptdates = [rptdate for rptdate in rptdates if rptdate > last_date]
-        if len(rptdates) > 0:
-            new_df = utils.download_season_rpt(ticker, rptdates)
-            if not pd.isnull(new_df):
-                df = df.append(new_df)
-                df.to_excel(fname)
+        if isinstance(df.loc[last_date]['prt_stocktonav'], float):
+            rptdates = [rptdate for rptdate in rptdates if rptdate > last_date]
+            if len(rptdates) > 0:
+                new_df = utils.download_season_rpt(ticker, rptdates)
+                if not pd.isnull(new_df):
+                    df = df.append(new_df)
+                    print df.head()
+                    # df.to_excel(fname)
+            else:
+                return
+        else:
+            utils.download_season_rpt(ticker, rptdates)
 
 def update_stock_season_rpt():
     stock_df = stock_fund.get_stock_fund()
@@ -176,11 +182,14 @@ def update_index_data(wind_code):
     else:
         end_date = datetime.datetime.today().strftime("%Y-%m-%d")
     if os.path.exists(fname):
-        print('updating %s...'%(wind_code))
         df = pd.read_excel(fname, index_col=0)
+        if 'outmessage' in df.columns:
+            del df['outmessage']
+            df = df[df.index < '2017-10-30']
         start_date = df.index[-1] + datetime.timedelta(1)
         if start_date > datetime.datetime.strptime(end_date, "%Y-%m-%d"):
             return
+        print('updating %s...'%(wind_code))
         add_df = download_index_close(wind_code, start_date, end_date)
         df = df.append(add_df)
         df.to_excel(fname)
@@ -206,17 +215,17 @@ def update_sector_data():
         update_index_data(wind_code)
 
 if __name__ == '__main__':
-    update_bond_data()
-    update_stock_data()
-    update_mixed_data()
     # update_stock_list()
     # update_bond_list()
     # update_mixed_list()
+    update_bond_data()
+    update_stock_data()
+    update_mixed_data()
     # update_stock_season_rpt()
     # update_mixed_season_rpt()
     # update_bond_season_rpt()
     comp.save_comp_dataframe()
-    comp.save_comp_rpt()
+    # comp.save_comp_rpt()
     comp.get_all_comp_daily_return()
     comp.get_all_comp_position()
     comp.comp_analysis()

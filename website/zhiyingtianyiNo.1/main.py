@@ -15,8 +15,9 @@ from bokeh.io import curdoc
 from bokeh.palettes import Spectral8
 
 # COLORS = Spectral8 + ["#053061", "#2166ac", "#4393c3", "#92c5de", "#d1e5f0", "#f7f7f7"]
-DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
-ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
+# DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
+# ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)
+# ZHIYING_FILE2 = '%s/zhiyingtianyi No.1.xlsx'%(DATA_DIR)
 
 portfolio_selection = [u"智盈添易一号第%d期"%(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if i not in const.exceptions]
 portfolio_dict = {u"智盈添易一号第%d期"%(i): unicode(i) for i in range(const.first_num_of_portfolio, const.last_num_of_portfolio+1) if i not in const.exceptions}
@@ -26,7 +27,7 @@ source_value = ColumnDataSource(data=dict(date=[], value=[]))
 
 def update_excel():
     date = time_text.value
-    fname = "%s/%s.xlsx"%(DATA_DIR, date)
+    fname = "%s/%s.xlsx"%(const.DATA_DIR, date)
     if not os.path.exists(fname):
         data_update.get_statistics(date)
     if not os.path.exists(fname):
@@ -45,19 +46,27 @@ def update_excel():
     }
 
 def update_plot():
-    date = time_text.value
-    df = pd.read_csv(ZHIYING_FILE)
     plot_value.title.text = portfolio_select.value
-
-    df.index = pd.to_datetime(df['date'], format='%Y/%m/%d')
     asset = portfolio_dict[portfolio_select.value]
-    df = df[[asset]]
-    df = df.dropna()
-    df.loc[:, 'return'] = df.pct_change()
-    df.loc[:, 'net value'] = (1+df['return']).cumprod()
-    df.loc[df.index[0], 'net value'] = 1
+    print asset
 
-    source_value.data = source_value.from_df(pd.DataFrame({'value': df['net value']}))
+    if int(asset) < 24:
+        df = pd.read_csv(const.ZHIYING_FILE)
+        df.index = pd.to_datetime(df['date'], format='%Y/%m/%d')
+        df = df[[asset]]
+        df = df.dropna()
+        df.loc[:, 'return'] = df.pct_change()
+        df.loc[:, 'net value'] = (1+df['return']).cumprod()
+        df.loc[df.index[0], 'net value'] = 1
+    else:
+        df = pd.read_excel(const.ZHIYING_FILE2, index_col=0)
+        df = df[[int(asset)]]
+        df = df.dropna()
+        df.loc[:, 'return'] = df[int(asset)] / 100.
+        df.loc[:, 'net value'] = (1+df['return']).cumprod()
+        df.loc[df.index[0], 'net value'] = 1
+
+    source_value.data = {'date': df.index, 'value': df['net value']}
 
 def update_data():
     for t in text:
@@ -68,8 +77,9 @@ def update_data():
     for t in text:
         t.value = ""
     df = pd.DataFrame(columns=[portfolio_dict[t] for t in portfolio_selection], index=[0])
-    df.ix[0] = values
-    df.to_csv("%s/%s.csv"%(DATA_DIR, update_time_text.value), index=False)
+    df.iloc[0] = values
+    df.to_csv("%s/%s.csv"%(const.DATA_DIR, update_time_text.value), index=False)
+    print df
 
     data_update.merge_to_sheet(update_time_text.value)
     time_text.value = update_time_text.value

@@ -42,7 +42,9 @@ DEPARTMENT_NAME = {'881001.WI': u'万得全A',
                    '000905.SH': u'中证500',
                    '000906.SH': u'中证800',
                    '399005.SZ': u'中小板',
-                   '399006.SZ': u'创业板'}
+                   '399006.SZ': u'创业板',
+                   '399550.SZ': u'央视50',
+                   'HSCAI.HI': u'恒生A股龙头'}
 DEPARTMENT_ENG_NAME = {'881001.WI': u'wdqa',
                        '000016.SH': u'sz50',
                        '000300.SH': u'hs300',
@@ -86,6 +88,7 @@ source_mean_line = ColumnDataSource(data=dict(date=[], quarter=[], year=[]))
 source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], tdays10=[]))
 source_concentration = ColumnDataSource(data=dict(date=[], concentration=[]))
 source_volume_table = ColumnDataSource(data=dict())
+source_eyby = ColumnDataSource(data=dict(date=[], spread=[], close=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -286,6 +289,14 @@ def update_volume_table():
         'industry': df['industry'],
     }
 
+def update_eyby():
+    df = pd.read_excel('%s/EYBY.xlsx'%(const.DATA_DIR))
+    source_eyby.data = {
+        'date': df.index,
+        'spread': ((100 / df['pe_ttm']) - df['ytm_b']).rolling(window=5).mean(),
+        'close': ((1 + df['close'].pct_change()).cumprod() - 1).rolling(window=5).mean(),
+    }
+
 def update_all():
     update_statistics()
     update_data()
@@ -297,6 +308,7 @@ def update_all():
     # update_mean_line()
     update_concentration()
     update_volume_table()
+    update_eyby()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -447,6 +459,14 @@ plot_concentration.title.text_font = 'Microsoft Yahei'
 plot_concentration.title.text = u'股票收益率集中性'
 plot_concentration.vbar(x='date', top='concentration', bottom=0, width=1, source=source_concentration)
 
+plot_eyby = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_eyby.title.text_font_size = "15pt"
+plot_eyby.yaxis.minor_tick_line_color = None
+plot_eyby.title.text_font = "Microsoft YaHei"
+plot_eyby.title.text = u'股债相对收益率'
+plot_eyby.line('date', 'spread', source=source_eyby, line_width=2, color='red', legend=u'股债相对收益率')
+plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'上证综指')
+
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 
 update_all()
@@ -461,7 +481,8 @@ liquidity_row = row(liquidity_select, index_select)
 
 inputs = widgetbox(time_text, time_end_text, asset_select)
 
-curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation, plot_consistency,
+curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
+                         plot_eyby, plot_consistency,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, plot_blank))
