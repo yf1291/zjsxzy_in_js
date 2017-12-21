@@ -1,3 +1,4 @@
+# encoding: utf-8
 import numpy as np
 import pandas as pd
 import pyfolio as pf
@@ -21,7 +22,8 @@ from bokeh.models import ColumnDataSource, CustomJS, NumeralTickFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button, NumberFormatter
 from bokeh.plotting import figure
 
-DATA_DIR = 'C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/website/FOF/data'
+# DATA_DIR = 'C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/website/FOF/data'
+DATA_DIR = 'D:/workspace/data/FOF/'
 COMP_RET_FILE = '%s/comp_ret.xlsx'%(const.FOF_DIR)
 COMP_POS_FILE = '%s/comp_position.xlsx'%(const.FOF_DIR)
 ret_df = pd.read_excel(COMP_RET_FILE)
@@ -207,6 +209,7 @@ def update_comp_table():
 def update_comp():
     plot_comp_nav.title.text = comp_select.value + u'基金净值'
     plot_comp_pos.title.text = comp_select.value + u'股票仓位'
+    print comp_select.value
     ret = ret_df[comp_select.value]
     acc_ret = (1 + ret).cumprod()
     acc_ret = acc_ret[acc_ret != 1]

@@ -7,7 +7,7 @@ def change(x):
         return u'下跌%.2f%%'%(-x)
 
 def up_down(x):
-    if x > 0:
+    if x > -0.00001:
         return u'增加%.2f%%'%(x)
     else:
         return u'减少%.2f%%'%(-x)
@@ -17,6 +17,9 @@ def hk_fund_name(name):
 
 def gold_fund_name(name):
     return name.find(u'黄金') != -1
+
+def oil_fund_name(name):
+    return name.find(u'原油') != -1
 
 def money_fund_name(name):
     return name.find(u'嘉实宝') != -1 or name.find(u'货币') != -1

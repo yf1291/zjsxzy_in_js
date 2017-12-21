@@ -80,17 +80,19 @@ def change_position(inv1_df, inv2_df, columns, string):
 # 基金持仓
 def fund_position(df):
     col_name = u'市值占净值'
-    hk, gold, bond, astock, oversea_stock, money = 0, 0, 0, 0, 0, 0
+    hk, gold, oil, bond, astock, oversea_stock, money = 0, 0, 0, 0, 0, 0, 0
     for index in df.index:
         name = df.loc[index, u'名称']
         ftype = df.loc[index, 'type']
         percent = df.loc[index, col_name]
-        if pd.isnull(name) or pd.isnull(ftype) or pd.isnull(percent):
+        if pd.isnull(name) or pd.isnull(percent):
             break
         if utils.hk_fund_name(name):
             hk += percent
         elif utils.gold_fund_name(name):
             gold += percent
+        elif utils.oil_fund_name(name):
+            oil += percent
         elif utils.money_fund_type(ftype) or utils.money_fund_name(name):
             money += percent
         elif utils.oversea_fund_type(ftype):
@@ -99,7 +101,7 @@ def fund_position(df):
             bond += percent
         else:
             astock += percent
-    return astock, hk, gold, money, oversea_stock, bond
+    return astock, hk, gold, oil, money, oversea_stock, bond
 
 # 本周投资情况分析
 def investment_analysis(inv1_df, inv2_df, fund1_df, fund2_df):
@@ -107,8 +109,8 @@ def investment_analysis(inv1_df, inv2_df, fund1_df, fund2_df):
     inv2_df.index = inv2_df.index.map(lambda x: x.strip())
 
     content = []
-    hk1, astock1, gold1, money1, oversea_stock1, bond1 = fund_position(fund1_df)
-    hk2, astock2, gold2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
+    hk1, astock1, gold1, oil1, money1, oversea_stock1, bond1 = fund_position(fund1_df)
+    hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
     line = money_management(inv1_df, inv2_df)
     num = (money2 - money1) * 100
     if abs(num) > 0.001:
@@ -134,7 +136,7 @@ def investment_analysis(inv1_df, inv2_df, fund1_df, fund2_df):
         elements.append(u'%s海外股票配置'%(utils.up_down(num)))
     line += u'；'.join(elements)
     content.append(line)
-    line = u'商品方面：%s黄金'%(utils.up_down((gold2-gold1)*100))
+    line = u'商品方面：%s黄金；%s原油'%(utils.up_down((gold2-gold1)*100.), utils.up_down((oil2-oil1)*100.))
     content.append(line)
     with open(u'%s/本周投资情况分析.txt'%(const.DESKTOP_DIR), 'w') as f:
         f.write('\n'.join(content).encode('utf-8'))
@@ -175,7 +177,7 @@ def finance_management(inv1_df, inv2_df):
 
 # 本期末账户状态
 def current_position(inv2_df, fund2_df, hold_df):
-    hk2, astock2, gold2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
+    hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
 
     content = []
     net_price = inv2_df.loc[u'资产总净值', u'市值（亿）']
@@ -183,25 +185,25 @@ def current_position(inv2_df, fund2_df, hold_df):
     content.append(line)
     if inv2_df.loc[u'债券', u'占净值比例'] > 0:
         bond2 += inv2_df.loc[u'债券', u'占净值比例']
-    line = u'固收配置规模：%.2f亿元'%(net_price*bond2)
+    line = u'固收配置规模：%.4f亿元'%(net_price*bond2)
     content.append(line)
-    line = u'权益类配置规模：%.2f亿元'%(net_price*(astock2+hk2))
+    line = u'权益类配置规模：%.4f亿元'%(net_price*(astock2+hk2))
     content.append(line)
-    line = u'大宗商品配置规模：%.2f亿元'%(net_price*(gold2))
+    line = u'大宗商品配置规模：%.4f亿元'%(net_price*(gold2 + oil2))
     content.append(line)
     if inv2_df.loc[u'存款', u'占净值比例'] > 0:
         money2 += inv2_df.loc[u'存款', u'占净值比例']
-    line = u'现金类配置规模：%.2f亿元'%(net_price*money2)
+    line = u'现金类配置规模：%.4f亿元'%(net_price*money2)
     content.append(line)
     line = u'杠杆率：100%'
     content.append(line)
-    line = u'今年以来收益：%.2f%%'%(hold_df.iloc[-1][u'累计收益率（%） ']*100)
-    content.append(line)
+    # line = u'今年以来收益：%.2f%%'%(hold_df.iloc[-1][u'累计收益率（%） ']*100)
+    # content.append(line)
     with open(u'%s/本期末账户状态.txt'%(const.DESKTOP_DIR), 'w') as f:
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20171120', u'稳进7号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20171218', u'稳进7号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']

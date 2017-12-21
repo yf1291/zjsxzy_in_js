@@ -66,7 +66,7 @@ def get_dataframe():
     pnl = get_panel()
     pnl.ix[:, :, 'return'] = pnl.minor_xs('close').pct_change()
     df = pnl.minor_xs('return')
-    print df.tail()
+    # print df.tail()
 
     rolled_df = utils.roll(df, 60)
     ratio = rolled_df.apply(lambda x: principal_ratio(x, 3))
@@ -83,5 +83,5 @@ if __name__ == '__main__':
     # download_data(codes, fields)
     main()
     df = get_dataframe()
-    print df
+    # print df
     df.to_excel('%s/consistency.xlsx'%(const.DATA_DIR))

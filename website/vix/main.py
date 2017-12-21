@@ -5,7 +5,6 @@ import os
 import sys
 
 from bokeh.io import curdoc
-from bokeh.charts import Bar, HeatMap
 from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource, NumeralTickFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button

@@ -1,3 +1,4 @@
+# encoding: utf-8
 import numpy as np
 import pandas as pd
 import datetime
@@ -5,7 +6,6 @@ import os
 import sys
 
 from bokeh.io import curdoc
-from bokeh.charts import Bar
 from bokeh.layouts import row, column, widgetbox
 from bokeh.models import ColumnDataSource, NumeralTickFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button, NumberFormatter
@@ -100,12 +100,13 @@ def time2start_date(t):
         return datetime.datetime.strptime(t, "%Y%m%d")
 
 def update_data():
+    print("update data")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
 
     dataframe = price.get_dataframe(symbol, start_date, end_date)
-    print dataframe.tail()
+    # print dataframe.tail()
     update_title()
     if dataframe.empty:
         source_price.data = {}
@@ -119,6 +120,7 @@ def update_data():
     plot_mom.title.text = asset_select.value + u"动量"
 
 def update_statistics():
+    print("update statistics")
     plot_sharpe.title.text = u"计算中..."
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
@@ -159,6 +161,7 @@ def update_statistics():
     source_sharpe.data = source_sharpe.from_df(df)
 
 def update_momentum():
+    print("update momentum")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
@@ -167,6 +170,7 @@ def update_momentum():
     source_mom.data = source_mom.from_df(data_df)
 
 def update_volatility():
+    print("update volatility")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
@@ -177,6 +181,7 @@ def update_volatility():
         plot_vol.line(x='days', y='vol', source=source_vol, line_width=5, line_alpha=0.6, color=ASSETS_COLOR[asset_select.value])
 
 def update_correlation():
+    print("update correlation")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol1 = asset_text_1.value
@@ -187,6 +192,7 @@ def update_correlation():
     source_cor.data = source_cor.from_df(data_df)
 
 def update_cost(industry=False):
+    print("update cost")
     if not industry:
         index_code = DEPARTMENT_REV_NAME[department_select.value]
         name = department_select.value
@@ -243,6 +249,7 @@ def update_cost(industry=False):
                                                     u"偏离均值%.2f个标准差"%(prof_dev_value)]}
 
 def update_liquidity():
+    print("update liquidity")
     # fname = '%s/liquidity.xlsx'%(const.DATA_DIR)
     symbol = liquidity_asset.value
     fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
@@ -258,6 +265,7 @@ def update_liquidity():
     source_liquidity.data = {'date': df.index.values, 'liquidity': df['liquidity'].values}
 
 def update_liquidity_risk():
+    print("update liquidity risk")
     fname = '%s/amihud_liquidity.xlsx'%(const.DATA_DIR)
     df = pd.read_excel(fname)
     col_name = '%s_%s'%(DEPARTMENT_ENG_NAME[DEPARTMENT_REV_NAME[index_select.value]], liquidity_select.value.lower())
@@ -265,21 +273,25 @@ def update_liquidity_risk():
                                   'risk': df[col_name]}
 
 def update_mean_line():
+    print("update mean line")
     data_df = mean_line.get_dataframe()
     data_df = data_df[data_df.index >= '2016-01-01']
     source_mean_line.data = source_mean_line.from_df(data_df)
 
 def update_industry_consistency():
+    print("update industry consistency")
     data_df = industry.get_dataframe()
     data_df = data_df[data_df.index >= '2015-01-01']
     source_consistency.data = source_consistency.from_df(data_df)
 
 def update_concentration():
+    print("update concentraion")
     data_df = concentration.get_dataframe()
     data_df['date'] = data_df.index
     source_concentration.data = source_concentration.from_df(data_df)
 
 def update_volume_table():
+    print("update volume table")
     df = pd.read_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
     source_volume_table.data = {
         'sec_name': df['sec_name'],
@@ -290,6 +302,7 @@ def update_volume_table():
     }
 
 def update_eyby():
+    print("update eyby")
     df = pd.read_excel('%s/EYBY.xlsx'%(const.DATA_DIR))
     source_eyby.data = {
         'date': df.index,

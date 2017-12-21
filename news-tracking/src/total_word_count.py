@@ -10,11 +10,11 @@ import pandas as pd
 import utils
 import const
 
-DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/data"
+# DATA_DIR = "C:/Users/jgtzsx01/Documents/workspace/data"
 # WORD_COUNT_FILE = "%s/wallstreetcn_words/wallstreetcn_word_count.json"%(DATA_DIR)
 # TOTAL_WORD_COUNT_FILE = "%s/wallstreetcn_words/wallstreetcn_total_word_count.json"%(DATA_DIR)
 
-def get_total_word_count():
+def get_total_word_count(word_count_file, total_word_count_file):
     """
     统计周总词频并scale然后保存到文件
     """
@@ -22,7 +22,7 @@ def get_total_word_count():
     # with open(WEEKLY_WORD_COUNT_FILE, 'r') as f:
     # with open(const.WORD_COUNT_FILE, 'r') as f:
         # word_cnt = json.load(f)
-    with open(const.WORD_CNT_FILE, 'rb') as fp:
+    with open(word_count_file, 'rb') as fp:
         word_cnt = pickle.load(fp)
     print("calculating total word count...")
     total_word_count = {}
@@ -35,7 +35,7 @@ def get_total_word_count():
     df.index = pd.to_datetime(df['date'], format="%Y-%m-%d")
     df.sort_index(inplace=True)
     df.to_csv("temp.csv", index=False)
-    with open(const.TOTAL_WORD_COUNT_FILE, 'wb') as f:
+    with open(total_word_count_file, 'wb') as f:
         pickle.dump(total_word_count, f)
     # with open(const.TOTAL_WORD_COUNT_FILE, 'w') as f:
         # json.dump(total_word_count, f)

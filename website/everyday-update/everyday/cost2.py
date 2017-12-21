@@ -10,8 +10,8 @@ import os
 import const
 import utils
 
-STOCK_DIR = 'D:Data/stocks2'
-BY_STOCK_DIR = 'D:Data/avg_cost2/by stock'
+STOCK_DIR = 'D:/Data/stocks2'
+BY_STOCK_DIR = 'D:/Data/avg_cost2/by stock'
 
 '''
 def convert_cost_turnover_days(df, stock):
@@ -120,7 +120,7 @@ def get_wind_data(code, start_date, end_date):
 def get_wind_data_all(index_code, start_date, end_date):
     codes = get_codes(index_code)
     for code in codes:
-        fname = 'D:Data/temp/%s.xlsx'%(code)
+        fname = 'D:/Data/temp/%s.xlsx'%(code)
         if os.path.exists(fname):
             continue
         print('downloading %s...'%(code))
@@ -132,7 +132,7 @@ def merge_data(index_code):
     codes = get_codes(index_code)
     for code in codes:
         print('merging %s'%(code))
-        fname1, fname2 = '%s/%s.xlsx'%(STOCK_DIR, code), 'D:Data/temp/%s.xlsx'%(code)
+        fname1, fname2 = '%s/%s.xlsx'%(STOCK_DIR, code), 'D:/Data/temp/%s.xlsx'%(code)
         df1 = pd.read_excel(fname1, index_col=0)
         df2 = pd.read_excel(fname2, index_col=0)
         # df2 = df2[df2.index < '2015-01-01']
@@ -141,7 +141,7 @@ def merge_data(index_code):
         df.to_excel(fname)
 
 if __name__ == '__main__':
-    # get_wind_data_all('881001.WI', '2010-04-01', '2010-06-30')
+    # get_wind_data_all('881001.WI', '2010-01-01', '2010-03-31')
 
-    merge_data('881001.WI')
+    # merge_data('881001.WI')
     get_history_turnover()

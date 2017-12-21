@@ -15,11 +15,11 @@ import const
 print("loading word count file...")
 # with open(WORD_COUNT_FILE, 'r') as f:
     # word_count = json.load(f)
-with open(const.WORD_COUNT_FILE, 'rb') as fp:
+with open(const.WST_WORD_CNT_FILE, 'rb') as fp:
     word_count = pickle.load(fp)
 # with open(TOTAL_WORD_COUNT_FILE, 'r') as f:
     # total_word_count = json.load(f)
-with open(const.TOTAL_WORD_COUNT_FILE, 'rb') as f:
+with open(const.WST_TOTAL_WORD_COUNT_FILE, 'rb') as f:
     total_word_count = pickle.load(f)
 print("loading word vector model...")
 model = gensim.models.Word2Vec.load(const.WALLSTCN_MODEL)
@@ -31,12 +31,37 @@ def get_args():
     args.word = args.word.decode('utf-8')
     return args
 
+def get_topic_heat(topic_number,
+                   look_back=7):
+    fname = '%s/topic_words/topic_%s_twords.xlsx'%(const.TOPIC_DIR, topic_number)
+    df = pd.read_excel(fname)
+    heat_count = {}
+    for word in df['word']:
+        if not utils.isNumber(word) and word in word_count:
+            for day, value in word_count[word].iteritems():
+                if not heat_count.has_key(day):
+                    heat_count[day] = 0
+                heat_count[day] += value
+    df = pd.DataFrame({'date': total_word_count.keys(), 'count': total_word_count.values()})
+    df.index = pd.to_datetime(df['date'], format="%Y-%m-%d")
+    df.sort_index(inplace=True)
+    heat_df = pd.DataFrame({"date": heat_count.keys(),
+                            "absolute": heat_count.values()})
+    heat_df.index = heat_df["date"].map(lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
+    heat_df.sort_index(inplace=True)
+    heat_df['total'] = df['count']
+    # 滚动k日
+    heat_df.loc[:, 'total'] = heat_df['total'].rolling(window=look_back).sum()
+    heat_df.loc[:, 'absolute'] = heat_df['absolute'].rolling(window=look_back).sum()
+    heat_df['relative'] = heat_df['absolute'] * 100. / heat_df['total']
+    heat_df.to_excel("%s/%s.xlsx"%(const.TOPIC_CLASS_DIR, topic_number), index=False)
+
 def get_word_heat(key_word,
                   threshold=0.5,
                   similar_words=1000,
                   start_date="2016-01-01",
                   end_date=datetime.datetime.today().strftime("%Y-%m-%d"),
-                  look_back=5):
+                  look_back=7):
 
     heat_count = word_count[key_word].copy()
     heat_count_relative = word_count[key_word].copy()
@@ -68,7 +93,7 @@ def get_word_heat(key_word,
     df = pd.DataFrame({'date': total_word_count.keys(), 'count': total_word_count.values()})
     df.index = pd.to_datetime(df['date'], format="%Y-%m-%d")
     df.sort_index(inplace=True)
-    df = df[df.index >= '2016-01-01']
+    # df = df[df.index >= '2016-01-01']
     # print df.tail()
 
     heat_df = pd.DataFrame({"date": heat_count.keys(),
@@ -114,6 +139,18 @@ def get_words_percentile():
     df = pd.DataFrame({'word': dic.keys(), 'percentile': dic.values()})
     df.to_excel('%s/percentile.xlsx'%(const.WORD_HEAT_DIR), index=False)
 
+def get_topic_percentile():
+    per, words = [], []
+    for i in range(const.TOPIC_NUMBER):
+        fname = '%s/%s.xlsx'%(const.TOPIC_CLASS_DIR, str(i))
+        temp = pd.read_excel(fname)
+        per.append(rank_percentile(temp['relative']))
+        fname = '%s/topic_words/topic_%s_twords.xlsx'%(const.TOPIC_DIR, str(i))
+        temp = pd.read_excel(fname)
+        words.append('%s %s %s'%(temp.iloc[0]['word'], temp.iloc[1]['word'], temp.iloc[2]['word']))
+    df = pd.DataFrame({'percentile': per, 'word': words, 'topic': ['Topic %d'%(i) for i in range(100)]})
+    df.to_excel('%s/topic_percentile.xlsx'%(const.WORD_HEAT_DIR), index=False)
+
 def get_correlation(s1, s2):
     start_date = '2016-03-01'
     end_date = min(s1.index[-1], s2.index[-1])
@@ -155,6 +192,9 @@ def main():
     calculate_words()
     # word_asset_correlation()
     get_words_percentile()
+    for i in range(100):
+        get_topic_heat(str(i))
+    get_topic_percentile()
 
 if __name__ == "__main__":
     main()

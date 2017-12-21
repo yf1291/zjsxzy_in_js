@@ -17,6 +17,7 @@ rptDate = '20170930'
 def download_index_close(wind_code, start_date, end_date):
     w.start()
     data = w.wsd(wind_code, 'close', start_date, end_date)
+    # print data
     return utils.wind2df(data)
 
 def update_fund_list(df, fname):
@@ -195,7 +196,7 @@ def update_index_data(wind_code):
         df.to_excel(fname)
     else:
         print('downloding %s...'%(wind_code))
-        start_date = '2010-01-01'
+        start_date = '2000-01-01'
         df = download_index_close(wind_code, start_date, end_date)
         df.to_excel(fname)
 
@@ -225,7 +226,7 @@ if __name__ == '__main__':
     # update_mixed_season_rpt()
     # update_bond_season_rpt()
     comp.save_comp_dataframe()
-    # comp.save_comp_rpt()
+    comp.save_comp_rpt()
     comp.get_all_comp_daily_return()
     comp.get_all_comp_position()
     comp.comp_analysis()

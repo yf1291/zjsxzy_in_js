@@ -1,3 +1,4 @@
+# encoding: utf-8
 from os.path import dirname, join
 import os
 import pandas as pd
@@ -121,15 +122,15 @@ portfolio_select.on_change('value', lambda attr, old, new: update_plot())
 update_excel()
 update_plot()
 
-update_time_text = TextInput(value=today.strftime("%Y-%m-%d"), title=u"更新日期", width=300)
-update_button = Button(label=u"更新数据", width=300, button_type="success")
-update_row = row(update_time_text, update_button)
-update_button.on_click(update_data)
-text = [TextInput(value="", title=name, width=165) for name in portfolio_selection]
-text_row_1 = row(text[0], text[1], text[2])
+# update_time_text = TextInput(value=today.strftime("%Y-%m-%d"), title=u"更新日期", width=300)
+# update_button = Button(label=u"更新数据", width=300, button_type="success")
+# update_row = row(update_time_text, update_button)
+# update_button.on_click(update_data)
+# text = [TextInput(value="", title=name, width=165) for name in portfolio_selection]
+# text_row_1 = row(text[0], text[1], text[2], text[3])
 
 controls = widgetbox(time_text, portfolio_select, button)
 table = widgetbox(data_table)
 
-curdoc().add_root(column(row(controls, table), plot_value, update_row, text_row_1))
+curdoc().add_root(column(row(controls, table), plot_value))
 curdoc().title = u"智盈添易一号"

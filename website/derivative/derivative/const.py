@@ -1,4 +1,10 @@
 # encoding: utf-8
 DATA_DIR = "D:/workspace/zjsxzy_in_js/website/derivative/data"
 OPTION_DIR = 'D:/Data/derivatives/options'
+FUTURE_DIR = 'D:/Data/derivatives/futures'
 OPT_LIST = u'D:/Data/list/期权列表.xlsx'
+HS300_FUT_LIST = u'D:/Data/list/沪深300指数期货列表.xlsx'
+SZ50_FUT_LIST = u'D:/Data/list/上证50指数期货列表.xlsx'
+ZZ500_FUT_LIST = u'D:/Data/list/中证500指数期货列表.xlsx'
+BOND_5Y_FUT_LIST = u'D:/Data/list/5年期国债期货列表.xlsx'
+BOND_10Y_FUT_LIST = u'D:/Data/list/10年期国债期货列表.xlsx'

@@ -20,7 +20,7 @@ def filter_stock(df):
     # 剔除非A类份额(包含A或者不包含任何字母)
     df = df[(df['sec_name'].str.contains('A')) | (~df['sec_name'].str.contains(r'[A-Z]'))]
     # 基金状态为开放申购|开放赎回
-    df = df[df['fund_status'] == u'开放申购|开放赎回']
+    # df = df[df['fund_status'] == u'开放申购|开放赎回']
     return df
 
 def save_stock_fund_panel():
