@@ -32,10 +32,11 @@ ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "SPGSCITR.SPI": u"商品总指数",
                 "USDX.FX": u"美元指数",
                 "USDCNY.FX": u"美元兑人民币",
-                "AU9999.SGE": u"黄金9999（民生银行）",
+                "AU9999.SGE": u"黄金9999",
                 "B.IPE": u"WTI原油",
                 "CA.LME": u"LME铜",
-                "VIX.GI": u"隐含波动率指数"}
+                "VIX.GI": u"隐含波动率指数",
+                "HSCAIT.HI": u'行业龙头指数'}
 DEPARTMENT_NAME = {'881001.WI': u'万得全A',
                    '000016.SH': u'上证50',
                    '000300.SH': u'沪深300',
@@ -44,7 +45,7 @@ DEPARTMENT_NAME = {'881001.WI': u'万得全A',
                    '399005.SZ': u'中小板',
                    '399006.SZ': u'创业板',
                    '399550.SZ': u'央视50',
-                   'HSCAI.HI': u'恒生A股龙头'}
+                   'HSCAIT.HI': u'恒生A股龙头'}
 DEPARTMENT_ENG_NAME = {'881001.WI': u'wdqa',
                        '000016.SH': u'sz50',
                        '000300.SH': u'hs300',
@@ -62,10 +63,14 @@ INDUSTRY_NAME = {'CI005001.WI': u'石油石化', 'CI005002.WI': u'煤炭', 'CI00
                  'CI005022.WI': u'非银行金融', 'CI005023.WI': u'房地产', 'CI005024.WI': u'交通运输',
                  'CI005025.WI': u'电子元器件', 'CI005026.WI': u'通信', 'CI005027.WI': u'计算机',
                  'CI005028.WI': u'传媒', 'CI005029.WI': u'综合'}
-COLORS = Spectral9 + ["#053061", "#2166ac", "#4393c3"] # "#92c5de", "#d1e5f0", "#f7f7f7", "#fddbc7", "#f4a582", "#d6604d", "#b2182b"]
+COLORS = Spectral9 + ["#053061", "#2166ac", "#4393c3" "#92c5de", "#d1e5f0"]# "#f7f7f7", "#fddbc7", "#f4a582", "#d6604d", "#b2182b"]
 ASSETS_NAME = {key: value for key, value in ASSETS_NAME.iteritems()}
 ASSETS_REV_NAME = {value: key for key, value in ASSETS_NAME.iteritems()}
+# print len(COLORS)
+# print len(ASSETS_NAME.values())
 ASSETS_COLOR = {asset: COLORS[i] for i, asset in enumerate(ASSETS_NAME.values())}
+# for key, value in ASSETS_COLOR.items():
+    # print key, value
 DEPARTMENT_REV_NAME = {value: key for key, value in DEPARTMENT_NAME.items()}
 INDUSTRY_REV_NAME = {value: key for key, value in INDUSTRY_NAME.items()}
 asset_selections = ASSETS_NAME.values()
@@ -89,6 +94,7 @@ source_turnover_days = ColumnDataSource(data=dict(date=[], tdays=[], tdays5=[], 
 source_concentration = ColumnDataSource(data=dict(date=[], concentration=[]))
 source_volume_table = ColumnDataSource(data=dict())
 source_eyby = ColumnDataSource(data=dict(date=[], spread=[], close=[]))
+source_momentum = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], color=[], text=[], text_pos=[], momentum=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -118,6 +124,68 @@ def update_data():
     update_momentum()
     plot_vol.title.text = asset_select.value + u"波动率锥"
     plot_mom.title.text = asset_select.value + u"动量"
+
+def update_momentum_statistics():
+    print('update momentum statistics')
+    plot_momentum.title.text = u"计算中..."
+    momM, momQ, momY = [], [], []
+    yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
+    for asset in asset_selections:
+        print(asset)
+        symbol = ASSETS_REV_NAME[asset]
+        fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
+        if not os.path.exists(fname):
+            wind_data.download_data(symbol)
+        dataframe = pd.read_csv(fname)
+        dataframe['date'] = pd.to_datetime(dataframe['date'], format="%Y-%m-%d")
+        dataframe = dataframe.set_index('date')
+        dataframe['return'] = dataframe['close'].pct_change()
+        # dataframe.dropna(inplace=True)
+        dataframe = dataframe[dataframe.index <= yesterday]
+        momM.append(dataframe['return'][-20:].mean())
+        momQ.append(dataframe['return'][-60:].mean())
+        momY.append(dataframe['return'][-243:].mean())
+        # print asset, dataframe['return'][-20:]
+        # print asset, dataframe['return'][-20:].mean(), dataframe['return'][-60:].mean(), dataframe['return'][-243:].mean()
+    df = pd.DataFrame({'momM': momM, 'momQ': momQ, 'momY': momY, 'asset': asset_selections})
+    df = df.sort_values('momQ', ascending=False)
+    df.to_excel('%s/temp.xlsx'%(const.DATA_DIR), index=False)
+
+    num_asset = len(asset_selections)
+    df.index = range(num_asset)
+    bottom = [0 for i in range(num_asset * 3)]
+    top, left, right, color, text, text_pos, momentum = [], [], [], [], [], [], []
+    for i in df.index:
+        # monthly momentum
+        left.append(i)
+        right.append(i + 0.2)
+        top.append(df.loc[i]['momM'])
+        color.append(COLORS[5])
+        text.append(df.loc[i]['asset'])
+        text_pos.append(i + 0.02)
+        momentum.append('%.1f'%(df.loc[i]['momM']*10000))
+
+        # quarterly momentum
+        left.append(i + 0.25)
+        right.append(i + 0.45)
+        top.append(df.loc[i]['momQ'])
+        color.append('#d53e4f')
+        text.append('')
+        text_pos.append(i + 0.27)
+        momentum.append('%.1f'%(df.loc[i]['momQ']*10000))
+
+        # yearly momentum
+        left.append(i + 0.5)
+        right.append(i + 0.7)
+        top.append(df.loc[i]['momY'])
+        color.append(COLORS[0])
+        text.append('')
+        text_pos.append(i + 0.52)
+        momentum.append('%.1f'%(df.loc[i]['momY']*10000))
+    df = pd.DataFrame({'top': top, 'bottom': bottom, 'left': left, 'right': right,
+                       'text': text, 'color': color, 'text_pos': text_pos, 'momentum': momentum})
+    plot_momentum.title.text = u'资产动量'
+    source_momentum.data = source_momentum.from_df(df)
 
 def update_statistics():
     print("update statistics")
@@ -380,7 +448,7 @@ plot_vol.line('days', 'median', source=source_vol, line_width=2, color='#33CCFF'
 plot_vol.line('days', 'percent_25', source=source_vol, line_width=2, color='#33FFCC', legend='1/4')
 plot_vol.line('days', 'min', source=source_vol, line_width=2, color='#33FF66', legend='Min')
 
-plot_sharpe = figure(plot_height=400, plot_width=1000, tools=tools, x_range=[-0.5, len(asset_selections)], y_range=[-6, 10], title="资产夏普率")
+plot_sharpe = figure(plot_height=400, plot_width=1000, tools=tools, x_range=[-0.5, len(asset_selections)+0.5], y_range=[-6, 10], title="资产夏普率")
 plot_sharpe.quad(left='left', right='right', bottom='bottom', top='top', source=source_sharpe, color='color')
 plot_sharpe.text(x='left', y=-5, text='text', source=source_sharpe, text_font_size='9pt', angle=0.5)
 plot_sharpe.text(x='text_pos', y='top', text='sharpe', source=source_sharpe, text_font_size='10pt')
@@ -388,6 +456,15 @@ plot_sharpe.xaxis.visible = False
 plot_sharpe.yaxis.axis_label = u"Sharpe Ratio"
 plot_sharpe.title.text_font_size = "15pt"
 plot_sharpe.yaxis.minor_tick_line_color = None
+
+plot_momentum = figure(plot_height=400, plot_width=1000, tools=tools, x_range=[-0.5, len(asset_selections)], y_range=[-0.005, 0.005], title=u'资产动量')
+plot_momentum.quad(left='left', right='right', bottom='bottom', top='top', source=source_momentum, color='color')
+plot_momentum.text(x='left', y=-0.003, text='text', source=source_momentum, text_font_size='9pt', angle=0.5)
+plot_momentum.text(x='text_pos', y='top', text='momentum', source=source_momentum, text_font_size='7pt')
+plot_momentum.xaxis.visible = False
+plot_momentum.title.text_font_size = '15pt'
+plot_momentum.yaxis.minor_tick_line_color = None
+plot_momentum.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 
 plot_correlation = figure(plot_height=400, plot_width=1000, tools=tools)
 plot_correlation.yaxis.formatter = NumeralTickFormatter(format="0.00%")
@@ -480,9 +557,11 @@ plot_eyby.title.text = u'股债相对收益率'
 plot_eyby.line('date', 'spread', source=source_eyby, line_width=2, color='red', legend=u'股债相对收益率')
 plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'上证综指')
 
+
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 
 update_all()
+update_momentum_statistics()
 
 asset_text_1 = TextInput(value="881001.WI", title=u"资产一", width=300)
 asset_text_2 = TextInput(value="HSI.HI", title=u"资产二", width=300)
@@ -494,7 +573,7 @@ liquidity_row = row(liquidity_select, index_select)
 
 inputs = widgetbox(time_text, time_end_text, asset_select)
 
-curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
+curdoc().add_root(column(inputs, plot_sharpe, plot_momentum, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
                          plot_eyby, plot_consistency,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,

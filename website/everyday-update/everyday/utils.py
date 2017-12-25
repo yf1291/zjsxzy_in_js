@@ -28,7 +28,7 @@ def get_money_fund_daily_return(start_date, end_date):
 
 def get_sharpe_ratio(daily_return):
     sharpe_ratio = empyrical.sharpe_ratio(daily_return)
-    # return sharpe_ratio
+    return sharpe_ratio
     start_date = daily_return.index[0]
     end_date = daily_return.index[-1]
     days = int((end_date - start_date).days)
@@ -40,6 +40,8 @@ def get_sharpe_ratio(daily_return):
     money_acc_return = (1 + money_daily_return).cumprod()[-1]
 
     volatility = daily_return.std() * np.sqrt(243)
+    print acc_return
+    print money_acc_return
 
     sharpe_ratio = (acc_return**(365./days) - money_acc_return**(365./days)) / volatility
     return sharpe_ratio

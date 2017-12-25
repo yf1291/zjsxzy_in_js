@@ -29,7 +29,7 @@ def wind2df(raw_data):
     return df
 
 def download_data(symbol,
-            start_date="2010-01-01",
+            start_date="2000-01-01",
             end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
     print start_date, end_date
     w.start()
@@ -43,7 +43,7 @@ def download_data(symbol,
     df.to_csv(fname, index=False)
 
 def download_all(symbols,
-                start_date="2010-01-01",
+                start_date="2000-01-01",
                 end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
     for symbol in symbols:
         print symbol
@@ -103,13 +103,13 @@ def get_stock_price_panel():
     pnl = pd.Panel(dic)
     print pnl.major_axis.shape
     pnl.to_pickle('D:/Data/price.pkl')
-    vdf = vdf.sort_values('volume', ascending=False).head(n=50)
+    vdf = vdf.sort_values('amt', ascending=False).head(n=50)
     vdf.to_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
-    get_stock_information()
 
 def main():
-    get_stock_price_panel()
-    download_all(ASSETS_NAME.keys())
+    # get_stock_price_panel()
+    get_stock_information()
+    # download_all(ASSETS_NAME.keys())
 
 if __name__ == "__main__":
     main()
