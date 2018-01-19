@@ -11,7 +11,7 @@ with open(const.STOP_WORD_FILE, 'r') as f:
     stop_words = set([line.strip().decode('utf-8') for line in f.readlines()])
 
 def save_wallst_text():
-    years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017']
+    years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
     with open(const.WST_WORD_CNT_CHECKED_FILE, 'r') as fp:
         checked_list = ([line.strip() for line in fp.readlines()])
 

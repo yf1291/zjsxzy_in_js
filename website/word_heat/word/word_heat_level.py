@@ -63,6 +63,7 @@ def get_word_heat(key_word,
                   end_date=datetime.datetime.today().strftime("%Y-%m-%d"),
                   look_back=7):
 
+    print(key_word)
     heat_count = word_count[key_word].copy()
     heat_count_relative = word_count[key_word].copy()
     heat_count_weighted = word_count[key_word].copy()
@@ -94,7 +95,7 @@ def get_word_heat(key_word,
     df.index = pd.to_datetime(df['date'], format="%Y-%m-%d")
     df.sort_index(inplace=True)
     # df = df[df.index >= '2016-01-01']
-    # print df.tail()
+    print df.tail()
 
     heat_df = pd.DataFrame({"date": heat_count.keys(),
                             "absolute": heat_count.values(),
@@ -103,7 +104,7 @@ def get_word_heat(key_word,
     heat_df.index = heat_df["date"].map(lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
     heat_df.sort_index(inplace=True)
     heat_df['total'] = df['count']
-    # print heat_df.tail()
+    print heat_df.tail()
     # 滚动k日
     heat_df.loc[:, 'total'] = heat_df['total'].rolling(window=look_back).sum()
     heat_df.loc[:, 'absolute'] = heat_df['absolute'].rolling(window=look_back).sum()
@@ -188,7 +189,7 @@ def word_asset_correlation():
 
 def main():
     # pass
-    # get_word_heat(u'美国')
+    # get_word_heat(u'战争')
     calculate_words()
     # word_asset_correlation()
     get_words_percentile()
@@ -197,4 +198,5 @@ def main():
     get_topic_percentile()
 
 if __name__ == "__main__":
-    main()
+    # main()
+    get_word_heat(u'集中度', threshold=1.0)

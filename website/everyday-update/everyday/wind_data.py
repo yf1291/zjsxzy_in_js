@@ -107,9 +107,9 @@ def get_stock_price_panel():
     vdf.to_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
 
 def main():
-    # get_stock_price_panel()
+    get_stock_price_panel()
     get_stock_information()
-    # download_all(ASSETS_NAME.keys())
+    download_all(ASSETS_NAME.keys())
 
 if __name__ == "__main__":
     main()

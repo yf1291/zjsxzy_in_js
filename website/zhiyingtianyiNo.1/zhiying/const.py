@@ -1,5 +1,5 @@
 first_num_of_portfolio = 23
-last_num_of_portfolio = 27
+last_num_of_portfolio = 28
 exceptions = set([])
 DATA_DIR = "D:/sheet/zhiyingtianyi portfolio"
 ZHIYING_FILE = "%s/zhiyingtianyi No.1.csv"%(DATA_DIR)

@@ -13,3 +13,4 @@ LIST_DIR = 'D:/Data/list'
 theme_file = u'%s/主题行业.xlsx'%(LIST_DIR)
 concept_file = u'%s/概念板块.xlsx'%(LIST_DIR)
 sector_file = u'%s/板块指数.xlsx'%(LIST_DIR)
+rptDate = '20170930'

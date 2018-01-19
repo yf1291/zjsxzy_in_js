@@ -107,6 +107,7 @@ def update_data():
     dataframe = dataframe.set_index('date')
     dataframe = dataframe[dataframe.index >= start_date]
     dataframe = dataframe[dataframe.index <= (datetime.datetime.today() - datetime.timedelta(1))]
+    dataframe = dataframe.replace([0], np.nan).dropna()
 
     # 加权值曲线
     df = pd.DataFrame({'ts': dataframe["weighted"]})

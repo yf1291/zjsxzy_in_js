@@ -60,7 +60,18 @@ def get_comp_daily_return(comp_name):
     weight_df = weight_zero_df.append(weight_df).sort_index()
     weight_df = weight_df.fillna(method='ffill').loc[df.index]
     weight_df = weight_df[~weight_df.index.duplicated(keep='first')]
-    weight_df = weight_df * (1 + df) # 基金规模自然增长
+    # print df.shape, weight_df.shape
+    # print (1 + df).tail()
+    # print weight_df.tail()
+    # weight_df = weight_df * (1 + df) # 基金规模自然增长
+    sum_weight = weight_df.sum(axis=1)
+    select_index = sum_weight[sum_weight > 0].index
+    weight_df = weight_df.loc[select_index]
+    # print weight_df.div(weight_df.sum(axis=1), axis='index')
+    # weight_df = weight_df.loc[sum_weight[sum_weight > 0].index]
+    # print select_index
+    # print weight_df.loc[select_index].div(sum_weight.loc[select_index].values(), axis='index')
+    # weight_df = weight_df.iloc[-100:]
     weight_df = weight_df.div(weight_df.sum(axis=1), axis='index') # 按基金规模加权
     ret = (weight_df * df).sum(axis=1)
     return ret
@@ -123,4 +134,5 @@ def comp_analysis(start_date='2017-07-01'):
         if comp_pos[c].shape[0] > 1 and comp_pos[c][-2] != 0:
             df.loc[c, 'pos'] = (comp_pos[c][-1] - comp_pos[c][-2]) / comp_pos[c][-2]
     df = df.sort_values('ret', ascending=False)
+    df = df.dropna()
     df.to_excel('%s/comp_analysis.xlsx'%(const.FOF_DIR))

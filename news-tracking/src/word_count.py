@@ -24,7 +24,7 @@ with open(const.STOP_WORD_FILE, 'r') as f:
     stop_words = set([line.strip() for line in f.readlines()])
 
 def update_wallst_word_count():
-    years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017']
+    years = ['2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018']
     # years = ['2010']
     with open(const.WST_WORD_CNT_FILE, 'rb') as fp:
         word_count = pickle.load(fp)

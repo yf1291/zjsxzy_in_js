@@ -95,7 +95,7 @@ def calculate_empyrical(fund_type):
 
 def download_season_rpt(ticker, rptdates):
     '''
-    下载基金季度报告数据
+    返回基金季度报告数据
     '''
     w.start()
     columns = "prt_netasset,prt_stocktonav,prt_bondtonav,prt_cashtonav,prt_stocktoasset"
@@ -105,7 +105,8 @@ def download_season_rpt(ticker, rptdates):
         data = [val[0] for val in data.Data]
         df.loc[rptdate] = data
     fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
-    df.to_excel(fname)
+    # df.to_excel(fname)
+    return df
 
 def generate_rptdate(start_date):
     """
@@ -121,7 +122,7 @@ def generate_rptdate(start_date):
             day = calendar.monthrange(year, month)[1]
             if datetime.datetime(year, month, day) < start_date:
                 continue
-            if datetime.datetime(year, month, day) > today:
+            if datetime.datetime(year, month, day) > pd.to_datetime(const.rptDate):
                 break
             rptdates.append('%d-%02d-%02d'%(year, month, day))
     return rptdates

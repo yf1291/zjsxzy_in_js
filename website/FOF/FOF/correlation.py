@@ -18,6 +18,7 @@ def get_data(symbol):
             data = w.wsd(symbol, 'close', '2015-01-01', today)
             df = utils.wind2df(data)
             df['return'] = df['close'].pct_change()
+            df.index = pd.to_datetime(df.index)
             df.to_excel(fname)
         return df[['return']]
     else:
@@ -33,7 +34,8 @@ def get_data(symbol):
 def get_dataframe(symbol1, symbol2):
     df1 = get_data(symbol1)
     df2 = get_data(symbol2)
-    print df2.head()
+    # print df1.head()
+    # print df2.head()
 
     if df1.empty or df2.empty:
         return pd.DataFrame()

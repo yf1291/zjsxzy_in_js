@@ -62,7 +62,7 @@ def get_statistics(date):
         max_drawdown.append(empyrical.max_drawdown(df['return'].dropna()))
         sharpe.append(empyrical.sharpe_ratio(df['return'].dropna()))
         volatility.append(empyrical.annual_volatility(df['return'].dropna()))
-        df = df[df.index >= datetime.datetime(2017, 1, 1)]
+        df = df[df.index >= datetime.datetime(2018, 1, 1)]
         start_value = df.loc[df.index[0], 'net value']
         end_value = df.loc[df.index[-1], 'net value']
         year_return.append((end_value-start_value)/start_value)
@@ -89,7 +89,7 @@ def get_statistics(date):
         max_drawdown.append(empyrical.max_drawdown(df['return'].dropna()))
         sharpe.append(empyrical.sharpe_ratio(df['return'].dropna()))
         volatility.append(empyrical.annual_volatility(df['return'].dropna()))
-        df = df[df.index >= datetime.datetime(2017, 1, 1)]
+        df = df[df.index >= datetime.datetime(2018, 1, 1)]
         start_value = df.loc[df.index[0], 'net value']
         end_value = df.loc[df.index[-1], 'net value']
         year_return.append((end_value-start_value)/start_value)

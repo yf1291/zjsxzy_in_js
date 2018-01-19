@@ -6,7 +6,6 @@ import datetime
 import os
 import sys
 from os.path import dirname, join
-sys.path.append('C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/FOF/src')
 
 import FOF.bond_fund as bond_fund
 import FOF.stock_fund as stock_fund
@@ -22,7 +21,6 @@ from bokeh.models import ColumnDataSource, CustomJS, NumeralTickFormatter
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button, NumberFormatter
 from bokeh.plotting import figure
 
-# DATA_DIR = 'C:/Users/jgtzsx01/Documents/workspace/zjsxzy_in_js/website/FOF/data'
 DATA_DIR = 'D:/workspace/data/FOF/'
 COMP_RET_FILE = '%s/comp_ret.xlsx'%(const.FOF_DIR)
 COMP_POS_FILE = '%s/comp_position.xlsx'%(const.FOF_DIR)
@@ -299,7 +297,7 @@ plot_comp_pos.yaxis.minor_tick_line_color = None
 plot_comp_pos.title.text_font_size = '15pt'
 plot_comp_pos.title.text_font = 'Microsoft Yahei'
 
-inputs = widgetbox(update_button, invtype1_select, invtype2_select, scale_select, time_select, fund_button, fund_text)
+inputs = widgetbox(invtype1_select, invtype2_select, scale_select, time_select, fund_button, fund_text)
 table = widgetbox(data_table)
 update_inputs()
 update_data()

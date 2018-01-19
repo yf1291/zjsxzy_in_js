@@ -73,6 +73,7 @@ def crawl_wallst(start_node=3010475):
                 with open(PAGE_NOT_FOUND_FILE, 'a') as f:
                     f.write(str(node_id) + '\n')
                 continue
+            title = title.replace(u'\u2022', '').replace(u'\u200b', '')
             print title
             content = soup.find(class_="page-article-content")
             if content == None:

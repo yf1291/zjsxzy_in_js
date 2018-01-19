@@ -95,6 +95,7 @@ source_concentration = ColumnDataSource(data=dict(date=[], concentration=[]))
 source_volume_table = ColumnDataSource(data=dict())
 source_eyby = ColumnDataSource(data=dict(date=[], spread=[], close=[]))
 source_momentum = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], color=[], text=[], text_pos=[], momentum=[]))
+source_industry_corr = ColumnDataSource(data=dict(date=[], corr=[], median=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -282,10 +283,10 @@ def update_cost(industry=False):
                                  'tdays10': market_df['turnover days'].rolling(window=7).mean().values}
     # market_df = market_df[market_df.index >= "2016-03-01"]
     market_df["mean"] = market_df["current return"].mean()
-    market_df['rolling mean'] = market_df['current return'].rolling(window=60).mean()
+    market_df['rolling mean'] = market_df['current return'].rolling(window=242).mean()
     market_df["zero"] = 0
     market_df["prof_mean"] = market_df["profit percentage"].mean()
-    market_df['rolling profit mean'] = market_df['profit percentage'].rolling(window=60).mean()
+    market_df['rolling profit mean'] = market_df['profit percentage'].rolling(window=242).mean()
     market_df["prof_50"] = 0.5
     last_value, mean_value = market_df["current return"][-1], market_df["rolling mean"][-1]
     last_prof_value, mean_prof_value = market_df["profit percentage"][-1], market_df["rolling profit mean"][-1]
@@ -378,6 +379,14 @@ def update_eyby():
         'close': ((1 + df['close'].pct_change()).cumprod() - 1).rolling(window=5).mean(),
     }
 
+def update_industry_corr():
+    df = pd.read_excel('%s/industry_corr.xlsx'%(const.DATA_DIR))
+    source_industry_corr.data = {
+        'date': df.index,
+        'corr': df['corr'].rolling(window=5).mean(),
+        'median': df['median'].rolling(window=5).mean()
+    }
+
 def update_all():
     update_statistics()
     update_data()
@@ -390,6 +399,7 @@ def update_all():
     update_concentration()
     update_volume_table()
     update_eyby()
+    update_industry_corr()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -557,6 +567,14 @@ plot_eyby.title.text = u'股债相对收益率'
 plot_eyby.line('date', 'spread', source=source_eyby, line_width=2, color='red', legend=u'股债相对收益率')
 plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'上证综指')
 
+plot_industry_corr = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_industry_corr.yaxis.formatter = NumeralTickFormatter(format="0.00")
+plot_industry_corr.title.text = u'行业指数相关性'
+plot_industry_corr.title.text_font_size = "15pt"
+plot_industry_corr.yaxis.minor_tick_line_color = None
+plot_industry_corr.title.text_font = "Microsoft YaHei"
+plot_industry_corr.line('date', 'corr', source=source_industry_corr, line_width=3, legend=u'均值')
+plot_industry_corr.line('date', 'median', source=source_industry_corr, line_width=3, color='red', legend=u'中位数')
 
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 
@@ -574,7 +592,7 @@ liquidity_row = row(liquidity_select, index_select)
 inputs = widgetbox(time_text, time_end_text, asset_select)
 
 curdoc().add_root(column(inputs, plot_sharpe, plot_momentum, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
-                         plot_eyby, plot_consistency,
+                         plot_eyby, plot_consistency, plot_industry_corr,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, plot_blank))

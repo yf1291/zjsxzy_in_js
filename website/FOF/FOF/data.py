@@ -111,22 +111,31 @@ def update_nav(ticker):
 def update_season_rpt(ticker, rptdates):
     fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
     if not os.path.exists(fname):
-        utils.download_season_rpt(ticker, rptdates)
+        df = utils.download_season_rpt(ticker, rptdates)
+        df.to_excel(fname)
     else:
         df = pd.read_excel(fname, index_col=0)
+        if df.shape[0] == 1:
+            print 'deleting %s'%(fname)
+            os.remove(fname)
+            df = utils.download_season_rpt(ticker, rptdates)
+            df.to_excel(fname)
         last_date = df.index[-1]
         if isinstance(df.loc[last_date]['prt_stocktonav'], float):
             rptdates = [rptdate for rptdate in rptdates if rptdate > last_date]
+            print rptdates
             if len(rptdates) > 0:
                 new_df = utils.download_season_rpt(ticker, rptdates)
-                if not pd.isnull(new_df):
+                # print new_df
+                if new_df.shape[0] > 0:
+                    assert(new_df.shape[1] == df.shape[1])
                     df = df.append(new_df)
-                    print df.head()
-                    # df.to_excel(fname)
+                    df.to_excel(fname)
             else:
                 return
         else:
-            utils.download_season_rpt(ticker, rptdates)
+            df = utils.download_season_rpt(ticker, rptdates)
+            df.to_excel(fname)
 
 def update_stock_season_rpt():
     stock_df = stock_fund.get_stock_fund()
@@ -135,6 +144,7 @@ def update_stock_season_rpt():
     for ticker, issue_date in zip(stock_df['wind_code'], stock_df['issue_date']):
         print('updating %s season report...'%(ticker))
         fund_rptdates = [rptdate for rptdate in rptdates if rptdate > issue_date]
+        fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
         update_season_rpt(ticker, fund_rptdates)
 
 def update_mixed_season_rpt():
@@ -219,12 +229,12 @@ if __name__ == '__main__':
     # update_stock_list()
     # update_bond_list()
     # update_mixed_list()
-    update_bond_data()
-    update_stock_data()
-    update_mixed_data()
     # update_stock_season_rpt()
     # update_mixed_season_rpt()
     # update_bond_season_rpt()
+    update_bond_data()
+    update_stock_data()
+    update_mixed_data()
     comp.save_comp_dataframe()
     comp.save_comp_rpt()
     comp.get_all_comp_daily_return()
