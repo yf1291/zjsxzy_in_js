@@ -98,7 +98,7 @@ def get_stock_price_panel():
     for f in files:
         fname = '%s/%s.xlsx'%(const.STOCK_DIR, f)
         df = pd.read_excel(fname, index_col=0)
-        dic[f] = df[['close', 'mkt_freeshares']]
+        dic[f] = df[['close', 'mkt_freeshares', 'volume']]
         vdf.loc[f, :] = df[columns].iloc[-1]
     pnl = pd.Panel(dic)
     print pnl.major_axis.shape

@@ -21,9 +21,6 @@ def gold_fund_name(name):
 def oil_fund_name(name):
     return name.find(u'原油') != -1
 
-def money_fund_name(name):
-    return name.find(u'嘉实宝') != -1 or name.find(u'货币') != -1
-
 def bond_fund_type(ftype):
     if ftype == None:
         return False

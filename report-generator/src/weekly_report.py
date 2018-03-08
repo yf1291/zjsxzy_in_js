@@ -14,7 +14,7 @@ def get_all_dataframe(fname):
 # 指数周数据
 def index_data(index_df):
     index_df = index_df.set_index(u'证券代码')
-    index_df[u'涨跌'] = index_df[u'涨跌幅'].map(lambda x: utils.change(x))
+    index_df[u'涨跌'] = index_df[u'涨跌幅(%)'].map(lambda x: utils.change(x))
     # 债券重命名
     index_df[u'证券简称'] = index_df[u'证券简称'].map(lambda x: x.replace(u'财富(总值)', '').replace(u'总', ''))
     index_df['content'] = ''
@@ -93,11 +93,12 @@ def fund_position(df):
             gold += percent
         elif utils.oil_fund_name(name):
             oil += percent
-        elif utils.money_fund_type(ftype) or utils.money_fund_name(name):
+        elif utils.money_fund_type(ftype):
             money += percent
         elif utils.oversea_fund_type(ftype):
             oversea_stock += percent
         elif utils.bond_fund_type(ftype):
+            # print name, ftype
             bond += percent
         else:
             astock += percent
@@ -178,13 +179,16 @@ def finance_management(inv1_df, inv2_df):
 # 本期末账户状态
 def current_position(inv2_df, fund2_df, hold_df):
     hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
+    bond2 = bond2 * inv2_df.loc[u'基金', u'占净值比例']
 
     content = []
     net_price = inv2_df.loc[u'资产总净值', u'市值（亿）']
     line = u'专户资产规模：%.4f亿元'%(net_price)
     content.append(line)
+    # print bond2
     if inv2_df.loc[u'债券', u'占净值比例'] > 0:
         bond2 += inv2_df.loc[u'债券', u'占净值比例']
+        # print bond2
     line = u'固收配置规模：%.4f亿元'%(net_price*bond2)
     content.append(line)
     line = u'权益类配置规模：%.4f亿元'%(net_price*(astock2+hk2))
@@ -203,7 +207,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180115', u'稳进7号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180305', u'精选FOF2号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']
@@ -212,9 +216,11 @@ if __name__ == '__main__':
     fund2_df = all_df[u'基金持仓2']
     hold_df = all_df[u'持仓']
     w.start()
-    data = w.wss(fund1_df[u'代码'].tolist(), 'fund_firstinvesttype')
+    fund_code = [x.replace('SS', 'SH') if x.endswith('.SS') else x for x in fund1_df[u'代码'].tolist()]
+    data = w.wss(fund_code, 'fund_firstinvesttype')
     fund1_df['type'] = data.Data[0]
-    data = w.wss(fund2_df[u'代码'].tolist(), 'fund_firstinvesttype')
+    fund_code = [x.replace('SS', 'SH') if x.endswith('.SS') else x for x in fund2_df[u'代码'].tolist()]
+    data = w.wss(fund_code, 'fund_firstinvesttype')
     fund2_df['type'] = data.Data[0]
 
     print(u'指数数据')

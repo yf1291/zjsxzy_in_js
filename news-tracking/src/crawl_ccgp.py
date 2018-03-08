@@ -42,7 +42,10 @@ def try_url(level1, level2, level3, date, article_id, data_dir):
         fname = '%s/%s'%(chdir, fname)
         # print fname
         if not os.path.exists(fname):
-            content = soup.find(class_='vF_detail_main').text
+            content = soup.find(class_='vF_detail_main')
+            if content == None:
+                content = soup.find(class_='vT_detail_main')
+            content = content.text
             with open(fname, 'w') as f:
                 f.write(content.encode('utf-8'))
         return True
@@ -60,4 +63,4 @@ def crawl_department(start_date, start_article, level1, level2, level3, data_dir
         article_id -= 1
 
 if __name__ == '__main__':
-    crawl_department('20171025', 9062048, 'cggg', 'dfgg', 'zbgg', const.CCGP_DATA_DIR_DFGG_ZBGG)
+    crawl_department('20171010', 8966652, 'cggg', 'dfgg', 'zbgg', const.CCGP_DATA_DIR_DFGG_ZBGG)

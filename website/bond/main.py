@@ -237,7 +237,7 @@ plot_cny.line('date', 'ndf', source=source_cny, line_width=2, color='#990000', l
 plot_cny.title.text_font_size = "15pt"
 plot_cny.title.text = u'人民币即期与远期汇率'
 plot_cny.title.text_font = "Microsoft YaHei"
-plot_cny.yaxis.formatter = NumeralTickFormatter(format="0.00%")
+plot_cny.yaxis.formatter = NumeralTickFormatter(format="0.00")
 plot_cny.yaxis.minor_tick_line_color = None
 
 plot_cdb = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')

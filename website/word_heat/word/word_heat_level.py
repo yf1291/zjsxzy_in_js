@@ -198,5 +198,5 @@ def main():
     get_topic_percentile()
 
 if __name__ == "__main__":
-    # main()
-    get_word_heat(u'集中度', threshold=1.0)
+    main()
+    # get_word_heat(u'集中度', threshold=1.0)

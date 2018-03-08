@@ -99,6 +99,7 @@ def download_season_rpt(ticker, rptdates):
     '''
     w.start()
     columns = "prt_netasset,prt_stocktonav,prt_bondtonav,prt_cashtonav,prt_stocktoasset"
+    print('downloading %s season report'%(ticker))
     df = pd.DataFrame({}, index=rptdates, columns=columns.split(','))
     for rptdate in rptdates:
         data = w.wss(ticker, columns, 'rptDate=%s'%(rptdate.strftime('%Y-%m-%d')))
@@ -106,6 +107,7 @@ def download_season_rpt(ticker, rptdates):
         df.loc[rptdate] = data
     fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
     # df.to_excel(fname)
+    df = df.dropna(how='all')
     return df
 
 def generate_rptdate(start_date):
@@ -113,7 +115,7 @@ def generate_rptdate(start_date):
     生成报告期
     """
     start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    years = range(2010, 2018)
+    years = range(2000, 2018)
     months = [3, 6, 9, 12]
     rptdates = []
     today = datetime.datetime.today()

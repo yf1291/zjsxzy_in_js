@@ -20,6 +20,7 @@ def save_comp_dataframe():
         for code in df['wind_code']:
             fname = '%s/history/%s.xlsx'%(const.DATA_DIR, code)
             temp = pd.read_excel(fname, index_col=0)
+            temp = temp.loc[~temp.index.duplicated(keep='first')]
             temp = temp['nav_adj']
             dic[code] = temp
         fdf = pd.DataFrame(dic)
@@ -67,6 +68,9 @@ def get_comp_daily_return(comp_name):
     sum_weight = weight_df.sum(axis=1)
     select_index = sum_weight[sum_weight > 0].index
     weight_df = weight_df.loc[select_index]
+    weight_df.to_excel('D:/Data/temp.xlsx')
+    # print weight_df.shape
+    # print weight_df.sum(axis=1)
     # print weight_df.div(weight_df.sum(axis=1), axis='index')
     # weight_df = weight_df.loc[sum_weight[sum_weight > 0].index]
     # print select_index

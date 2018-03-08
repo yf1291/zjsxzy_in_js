@@ -117,19 +117,20 @@ def update_data():
     fname = '%s/history/%s.xlsx'%(const.DATA_DIR, ticker)
     df = pd.read_excel(fname, index_col=0)
     temp = df['nav_adj'].dropna()
-    temp = temp[temp.index >= temp.index[-min(time_days[time_select.value], temp.shape[0]-1)]]
+    # temp = temp[temp.index >= temp.index[-min(time_days[time_select.value], temp.shape[0]-1)]]
     source_nav.data['date'] = temp.index.values
     source_nav.data['nav'] = temp.values
-    temp = df[time_dict[time_select.value]].dropna()
-    temp = temp[temp.index >= temp.index[-min(time_days[time_select.value], temp.shape[0]-1)]]
-    source_return.data['date'] = temp.index.values
-    source_return.data['ret'] = temp.values
     plot_nav.title.text = fund_name + u'净值'
-    plot_return.title.text = fund_name + time_select.value + u'收益率'
+    # temp = df[time_dict[time_select.value]].dropna()
+    # temp = temp[temp.index >= temp.index[-min(time_days[time_select.value], temp.shape[0]-1)]]
+    # source_return.data['date'] = temp.index.values
+    # source_return.data['ret'] = temp.values
+    # plot_return.title.text = fund_name + u'收益率'
 
 def get_rank(df, ret_df, empyrical_df):
     percent = 1 - 0.1
     ret_df = ret_df[df['wind_code']]
+    ret_df = ret_df.fillna(method='ffill')
     df.loc[:, 'current return'] = ret_df.values[-1]
     # df.loc[:, 'volatility'] = ret_df.ix[-min(ret_df.shape[0], time_days[time_select.value]):].std().values
     omega_ratio = empyrical_df.loc[df['wind_code'], 'omega'].values
@@ -160,9 +161,9 @@ def update_table_data(df):
 
 def select_fund():
     nav_title = plot_nav.title.text
-    ret_title = plot_return.title.text
+    # ret_title = plot_return.title.text
     plot_nav.title.text = u'查询中...'
-    plot_return.title.text = u'查询中...'
+    # plot_return.title.text = u'查询中...'
     time_value = time_dict[time_select.value]
     if invtype1_select.value == u'债券型基金':
         bond_df = bond_fund.get_bond_fund()
@@ -182,13 +183,17 @@ def select_fund():
         ret_df = pd.read_pickle('%s/mixed_%s.pkl'%(const.FOF_DIR, time_value))
         empyrical_df = pd.read_excel('%s/mixed_empyrical.xlsx'%(const.FOF_DIR))
         df = mixed_fund.filter_mixed(mixed_df)
+    # df.to_excel('./temp1.xlsx')
     df = type_filter(df)
+    # df.to_excel('./temp2.xlsx')
     df = scale_filter(df)
+    # df.to_excel('./temp3.xlsx')
     # ret_df = pnl[df['wind_code']].minor_xs(time_dict[time_select.value])
     df = get_rank(df, ret_df, empyrical_df)
+    df.to_excel('./temp4.xlsx')
     update_table_data(df)
     plot_nav.title.text = nav_title
-    plot_return.title.text = ret_title
+    # plot_return.title.text = ret_title
 
 def update_correlation():
     fund1, fund2 = fund1_text.value, fund2_text.value
@@ -221,6 +226,11 @@ invtype2_select = Select(value=bond_type_selections[0], title=u'基金二级投�
 scale_select = Select(value=scale_selections[0], title=u'基金资产净值', width=200, options=scale_selections)
 time_select = Select(value=u'1年', title=u'业绩时间窗口', width=200, options=time_selections)
 time_select.on_change('value', lambda attr, old, new: update_data())
+# today = datetime.datetime.today()
+# time_start = TextInput(label=(today - datetime.timedelta(365)).strftime('%Y-%m-%d'), title=u'开始日期', width=200)
+# time_start.on_change('value', lambda attr, old, new: update_data())
+# time_end = TextInput(label=today.strftime('%Y-%m-%d'), title=u'结束日期', width=200)
+# time_end.on_change('value', lambda attr, old, new: update_data())
 fund_button = Button(label=u"筛选基金", button_type="success", width=200)
 fund_button.on_click(select_fund)
 update_button = Button(label=u'更新数据', button_type='success', width=200)
@@ -258,12 +268,12 @@ plot_nav.title.text_font_size = "15pt"
 plot_nav.yaxis.minor_tick_line_color = None
 plot_nav.title.text_font = "Microsoft YaHei"
 
-plot_return = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
-plot_return.line('date', 'ret', source=source_return, line_width=3, line_alpha=0.6)
-plot_return.yaxis.formatter = NumeralTickFormatter(format="0.00%")
-plot_return.title.text_font_size = "15pt"
-plot_return.yaxis.minor_tick_line_color = None
-plot_return.title.text_font = "Microsoft YaHei"
+# plot_return = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+# plot_return.line('date', 'ret', source=source_return, line_width=3, line_alpha=0.6)
+# plot_return.yaxis.formatter = NumeralTickFormatter(format="0.00%")
+# plot_return.title.text_font_size = "15pt"
+# plot_return.yaxis.minor_tick_line_color = None
+# plot_return.title.text_font = "Microsoft YaHei"
 
 fund1_text = TextInput(value='070099.OF', title=u'基金1Wind代码', width=200)
 fund2_text = TextInput(value='070013.OF', title=u'基金2Wind代码', width=200)
@@ -306,6 +316,6 @@ update_comp()
 update_comp_table()
 select_fund()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, plot_return, corr_col, plot_correlation,
+curdoc().add_root(column(row(inputs, table), plot_nav, corr_col, plot_correlation,
                          widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
 curdoc().title = u'基金筛选'

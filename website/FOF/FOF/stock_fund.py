@@ -32,7 +32,9 @@ def save_stock_fund_panel():
     for ticker in df['wind_code']:
         fname = '%s/history/%s.xlsx'%(const.DATA_DIR, ticker)
         df = pd.read_excel(fname, index_col=0)
-        df = df[df.index >= '2014-01-01']
+        df = df.loc[~df.index.duplicated(keep='first')]
+        df = utils.get_historical_return(df)
+        df = df[df.index >= '2000-01-01']
         if df.ix[-1, 'nav_adj'] < 0:
             print('error on %s'%(ticker))
             continue

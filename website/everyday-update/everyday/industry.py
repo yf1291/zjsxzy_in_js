@@ -86,7 +86,7 @@ def correlation():
         fname = '%s/%s.xlsx'%(INDEX_DIR, code)
         temp = pd.read_excel(fname)
         temp = temp[temp.index >= '2005-01-01']
-        dic[code] = temp['close'].pct_change().rolling(window=243).corr(df['close'].pct_change())
+        dic[code] = (1+temp['close'].pct_change()).cumprod().rolling(window=243).corr((1+df['close'].pct_change()).cumprod())
     cor_df = pd.DataFrame(dic)
     cor_df = pd.DataFrame({'corr': cor_df.mean(axis=1), 'median': cor_df.median(axis=1)})
     cor_df = cor_df.dropna()

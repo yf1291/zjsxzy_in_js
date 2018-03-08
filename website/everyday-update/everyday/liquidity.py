@@ -147,5 +147,5 @@ def cal_market_liquidity_proxy():
     df.to_excel('%s/amihud_liquidity.xlsx'%(const.DATA_DIR))
 
 if __name__ == '__main__':
-    # cal_market_liquidity()
+    cal_market_liquidity()
     cal_market_liquidity_proxy()

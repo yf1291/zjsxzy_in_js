@@ -83,7 +83,7 @@ source_sharpe = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[],
 source_vol = ColumnDataSource(data=dict(days=[], vol=[], max=[], min=[], median=[], percent_75=[], percent_25=[]))
 source_cor = ColumnDataSource(data=dict(days=[], cor=[], max=[], min=[], median=[], percent_75=[], percent_25=[]))
 source_mom = ColumnDataSource(data=dict(date=[], mom20=[], mom60=[], mom121=[], mom242=[]))
-source_turnover_cost = ColumnDataSource(data=dict(date=[], cost=[], profit=[], mean=[], zero=[], prof_mean=[], prof_50=[]))
+source_turnover_cost = ColumnDataSource(data=dict(date=[], cost=[], profit=[], mean=[], zero=[], prof_mean=[], prof_50=[], rolling_mean=[], rolling_profit_mean=[]))
 source_turnover_cost_text = ColumnDataSource(data=dict(text_x=[], text_y=[], text=[], prof_text_y=[], prof_text=[]))
 source_consistency = ColumnDataSource(data=dict(date=[], con60=[]))
 # source_liquidity = ColumnDataSource(data=dict(date=[], sz50=[], hs300=[], zz500=[], zz800=[], zxb=[], cyb=[], wdqa=[]))
@@ -296,8 +296,8 @@ def update_cost(industry=False):
                                  "cost": market_df["current return"].values,
                                  "mean": market_df["mean"].values,
                                  "zero": market_df["zero"].values,
-                                 "rolling mean": market_df["rolling mean"].values,
-                                 "rolling profit mean": market_df["rolling profit mean"].values,
+                                 "rolling_mean": market_df["rolling mean"].values,
+                                 "rolling_profit_mean": market_df["rolling profit mean"].values,
                                  "profit": market_df["profit percentage"].values,
                                  "prof_mean": market_df["prof_mean"].values,
                                  "prof_50": market_df["prof_50"].values}
@@ -499,7 +499,7 @@ plot_consistency.line('date', 'con60', source=source_consistency, line_width=3)
 plot_cost = figure(plot_height=400, plot_width=1000, tools=tools, title=u"万得全A持有成本盈亏", x_axis_type="datetime")
 plot_cost.text(x='text_x', y='text_y', text='text', source=source_turnover_cost_text, text_font_size='9pt')
 plot_cost.line('date', 'cost', source=source_turnover_cost, line_width=3, legend=u"当前盈亏")
-plot_cost.line('date', 'rolling mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏季度均值")
+plot_cost.line('date', 'rolling_mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏季度均值")
 plot_cost.line('date', 'zero', source=source_turnover_cost, line_width=2, color='red', legend=u"零")
 plot_cost.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_cost.yaxis.axis_label = u"percentage"
@@ -509,7 +509,7 @@ plot_cost.yaxis.minor_tick_line_color = None
 plot_profit = figure(plot_height=400, plot_width=1000, tools=tools, title=u"万得全A持仓盈亏百分比", x_axis_type="datetime")
 plot_profit.text(x='text_x', y='prof_text_y', text='prof_text', source=source_turnover_cost_text, text_font_size='9pt')
 plot_profit.line('date', 'profit', source=source_turnover_cost, line_width=3, legend=u"当前盈亏百分比")
-plot_profit.line('date', 'rolling profit mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏百分比季度均值")
+plot_profit.line('date', 'rolling_profit_mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏百分比季度均值")
 plot_profit.line('date', 'prof_50', source=source_turnover_cost, line_width=2, color='red', legend=u"50%")
 plot_profit.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_profit.yaxis.axis_label = u"percentage"
@@ -596,4 +596,5 @@ curdoc().add_root(column(inputs, plot_sharpe, plot_momentum, plot_price, plot_mo
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, plot_blank))
+# curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"

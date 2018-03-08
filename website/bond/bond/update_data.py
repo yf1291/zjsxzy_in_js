@@ -41,6 +41,12 @@ def update_treasury():
     df.to_excel(writer, sheet_name='usa')
     writer.save()
 
+def update_usa_treasury():
+    # 美国长短债收益率数据
+    df = pd.read_excel(const.usa_treasury_file, index_col=0, sheetname='bond')
+    df = new_df(df)
+    df.to_excel(const.usa_treasury_file, sheet_name='bond')
+
 def update_libor():
     # SHIBOR数据
     df = pd.read_excel(const.libor_file, index_col=0, sheetname='shibor')
@@ -76,6 +82,7 @@ def update_product():
 
 def update():
     update_treasury()
+    update_usa_treasury()
     update_libor()
     update_corporate()
     update_repo()

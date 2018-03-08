@@ -30,13 +30,19 @@ def save_bond_fund_panel():
     # 原始基金数据
     dic = {}
     for ticker in df['wind_code']:
+        # print ticker
         fname = '%s/history/%s.xlsx'%(const.DATA_DIR, ticker)
         df = pd.read_excel(fname, index_col=0)
-        df = df[df.index >= '2014-01-01']
+        df = df.loc[~df.index.duplicated(keep='first')]
+        df = utils.get_historical_return(df)
+        df = df[df.index >= '2000-01-01']
+        # print df
         if df.ix[-1, 'nav_adj'] < 0:
             print('error on %s'%(ticker))
             continue
         dic[ticker] = df
+        if df.shape[1] != 7:
+            print ticker
     pnl = pd.Panel(dic)
 
     for item in pnl.minor_axis:
@@ -48,13 +54,3 @@ def save_bond_fund_panel():
             df = pnl.minor_xs(item).pct_change()
             df.to_pickle('%s/bond_return.pkl'%(const.FOF_DIR))
             utils.calculate_empyrical('bond')
-
-    # pnl.to_pickle('%s/bond.pkl'%(const.FOF_DIR))
-
-def main():
-    save_bond_fund_panel()
-    # df = get_bond_fund()
-    # utils.get_historical_return(df['wind_code'].tolist())
-
-if __name__ == '__main__':
-    main()

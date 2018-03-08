@@ -63,7 +63,10 @@ def append_to_old_excel(code):
     """
     print('updating %s...'%(code))
     fname = "%s/%s.xlsx"%(const.STOCK_DIR, code)
+    # print fname
     df = pd.read_excel(fname, index_col=0)
+    # df = df.drop(df.index[-1])
+    # df.to_excel(fname)
     # df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
     # df.index = pd.to_datetime(df.index)
     # df.to_excel(fname)

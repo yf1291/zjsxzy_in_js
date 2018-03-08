@@ -44,5 +44,5 @@ def save_to_file():
 
 if __name__ == '__main__':
     # save_theme_from_excel()
-    # update_data()
+    update_data()
     save_to_file()
