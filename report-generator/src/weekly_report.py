@@ -51,10 +51,10 @@ def domestic_stock_market(index_df):
 # 固定收益市场
 def bond_market(index_df):
     content = u'%s；%s；%s；%s。'%(
-            index_df.loc['045.CS', 'content'],
-            index_df.loc['066.CS', 'content'],
-            index_df.loc['053.CS', 'content'],
-            index_df.loc['057.CS', 'content'])
+            index_df.loc['CBA01001.CS', 'content'],
+            index_df.loc['CBA02701.CS', 'content'],
+            index_df.loc['CBA01801.CS', 'content'],
+            index_df.loc['CBA00201.CS', 'content'])
     return content
 
 # 大宗商品市场
@@ -207,7 +207,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180305', u'精选FOF2号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180319', u'稳进7号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']

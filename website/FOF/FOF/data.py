@@ -245,6 +245,7 @@ def update_index_data(wind_code):
         end_date = datetime.datetime.today().strftime("%Y-%m-%d")
     if os.path.exists(fname):
         df = pd.read_excel(fname, index_col=0)
+        df = df[df.index < '2018-03-05']
         if 'outmessage' in df.columns:
             del df['outmessage']
             # df = df[df.index < '2017-10-30']

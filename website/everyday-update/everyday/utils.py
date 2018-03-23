@@ -3,6 +3,7 @@ from WindPy import w
 import numpy as np
 import pandas as pd
 import os
+import datetime
 
 import const
 
@@ -63,3 +64,6 @@ def get_index_component(index_code):
     index_file = "%s/%s.xlsx"%(const.INDEX_DIR, index_code)
     df = pd.read_excel(index_file)
     return df['wind_code'].tolist()
+
+def next_date(date):
+    return pd.to_datetime(date) + datetime.timedelta(1)

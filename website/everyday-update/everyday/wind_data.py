@@ -3,22 +3,25 @@
 from WindPy import w
 import datetime
 import pandas as pd
+import numpy as np
 import os
 
 import const
+import utils
 
 ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "HSI.HI": u"恒生指数",
                 "SPX.GI": u"标普500",
                 "SX5P.GI": u"欧洲50",
-                "065.CS": u"中债新综合财富指数",
+                "CBA00101.CS": u"中债新综合财富指数",
                 "SPGSCITR.SPI": u"商品总指数",
                 "USDX.FX": u"美元指数",
                 "USDCNY.FX": u"美元兑人民币",
                 "AU9999.SGE": u"黄金9999（民生银行）",
                 "B.IPE": u"WTI原油",
                 "CA.LME": u"LME铜",
-                "VIX.GI": u"隐含波动率指数"}
+                "VIX.GI": u"隐含波动率指数",
+                "HSCAIT.HI": u'行业龙头指数'}
 
 
 def wind2df(raw_data):
@@ -28,26 +31,50 @@ def wind2df(raw_data):
     df = pd.DataFrame(dic, index=raw_data.Times)
     return df
 
+def download_wind_data(symbol, start_date, end_date):
+    print start_date, end_date
+    w.start()
+    data = w.wsd(symbol, 'close', start_date, end_date)
+    df = pd.DataFrame({'date': data.Times, 'close': np.array(data.Data[0])})
+    df['date'] = df['date'].map(lambda x: x.strftime("%Y-%m-%d"))
+    return df
+
 def download_data(symbol,
             start_date="2000-01-01",
             end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
-    print start_date, end_date
-    w.start()
-    raw_data = w.wsd(symbol, "close", beginTime=start_date, endTime=end_date)
-    dic = {'date': raw_data.Times}
-    for data, field in zip(raw_data.Data, raw_data.Fields):
-        dic[str(field.lower())] = data
-    df = pd.DataFrame(dic)
-    df['date'] = df['date'].map(lambda x: x.strftime("%Y-%m-%d"))
     fname = "%s/%s.csv"%(const.DATA_DIR, symbol)
-    df.to_csv(fname, index=False)
+    if os.path.exists(fname):
+        df = pd.read_csv(fname)
+        start_date = utils.next_date(df['date'].iloc[-1])
+        app_df = download_wind_data(symbol, start_date, end_date)
+        df = df.append(app_df)
+        # df.to_csv(fname, index=False)
+    else:
+        df = download_wind_data(symbol, start_date, end_date)
+        # df.to_csv(fname, index=False)
+
+    # w.start()
+    # raw_data = w.wsd(symbol, "close", beginTime=start_date, endTime=end_date)
+    # dic = {'date': raw_data.Times}
+    # for data, field in zip(raw_data.Data, raw_data.Fields):
+        # dic[str(field.lower())] = data
+    # df = pd.DataFrame(dic)
+    # df['date'] = df['date'].map(lambda x: x.strftime("%Y-%m-%d"))
+    # df.to_csv(fname, index=False)
 
 def download_all(symbols,
                 start_date="2000-01-01",
                 end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
+    df = pd.read_excel('D:/wind_data.xlsx')
     for symbol in symbols:
         print symbol
-        download_data(symbol, start_date=start_date, end_date=end_date)
+        out = df[[symbol]].copy()
+        out.columns = ['close']
+        out['date'] = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+        out = out.replace([0.0], np.NAN)
+        fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
+        out.to_csv(fname, index=False)
+        # download_data(symbol, start_date=start_date, end_date=end_date)
 
 def get_component(symbols,
                   date=datetime.datetime.today().strftime("%Y-%m-%d")):

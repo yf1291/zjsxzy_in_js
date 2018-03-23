@@ -133,12 +133,18 @@ def get_words_percentile():
     with open('%s/words.txt'%(const.WORD_HEAT_DIR), 'r') as f:
         words = [w.strip().decode('utf-8') for w in f.readlines()]
     dic = {}
+    wei = {}
     for word in words:
         fname = '%s/%s_0.5.csv'%(const.ASSET_CLASS_DIR, word)
         df = pd.read_csv(fname)
         dic[word] = rank_percentile(df['weighted'])
+        fname = '%s/%s_zt.xlsx'%(const.WEI_INDEX_DIR, word)
+        df = pd.read_excel(fname, index_col=0)
+        wei[word] = rank_percentile(df['value'])
     df = pd.DataFrame({'word': dic.keys(), 'percentile': dic.values()})
     df.to_excel('%s/percentile.xlsx'%(const.WORD_HEAT_DIR), index=False)
+    df = pd.DataFrame({'word': wei.keys(), 'percentile': wei.values()})
+    df.to_excel('%s/wei_percentile.xlsx'%(const.WORD_HEAT_DIR), index=False)
 
 def get_topic_percentile():
     per, words = [], []

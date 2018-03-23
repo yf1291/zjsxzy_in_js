@@ -146,6 +146,21 @@ def cal_market_liquidity_proxy():
     df['cyb_roll'] = roll
     df.to_excel('%s/amihud_liquidity.xlsx'%(const.DATA_DIR))
 
+def min_liquidity():
+    codes = utils.get_index_component('000300.SH')
+    dic = {}
+    for code in codes:
+        fname = '%s/%s.xlsx'%(const.MIN_STOCK_DIR, code)
+        temp = pd.read_excel(fname)
+        liquidity = temp.resample('D').apply(lambda x: x['close'].pct_change().abs() / x['amt'])
+        dic[code] = pd.Series(liquidity.values, index=temp.index)
+    df = pd.DataFrame(dic)
+    # df.to_excel('%s/temp.xlsx'%(const.DATA_DIR))
+    df = df.replace([np.inf, -np.inf], np.NAN)
+    df['liquidity'] = df.median(axis=1)
+    df[['liquidity']].to_excel('%s/min_liquidity.xlsx'%(const.DATA_DIR))
+
 if __name__ == '__main__':
     cal_market_liquidity()
     cal_market_liquidity_proxy()
+    min_liquidity()

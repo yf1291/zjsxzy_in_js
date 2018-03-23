@@ -28,7 +28,7 @@ ASSETS_NAME = {"881001.WI": u"万得全A指数",
                 "HSI.HI": u"恒生指数",
                 "SPX.GI": u"标普500",
                 "SX5P.GI": u"欧洲50",
-                "065.CS": u"中债新综合财富指数",
+                "CBA00101.CS": u"中债新综合财富指数",
                 "SPGSCITR.SPI": u"商品总指数",
                 "USDX.FX": u"美元指数",
                 "USDCNY.FX": u"美元兑人民币",
@@ -96,6 +96,7 @@ source_volume_table = ColumnDataSource(data=dict())
 source_eyby = ColumnDataSource(data=dict(date=[], spread=[], close=[]))
 source_momentum = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], color=[], text=[], text_pos=[], momentum=[]))
 source_industry_corr = ColumnDataSource(data=dict(date=[], corr=[], median=[]))
+source_min_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -212,7 +213,9 @@ def update_statistics():
         dataframe['return'] = dataframe['close'].pct_change()
         dataframe = dataframe[(dataframe.index >= start_date) & (dataframe.index <= end_date)]
         dataframe.dropna(inplace=True)
+        # print dataframe.head()
         sharpe = utils.get_sharpe_ratio(dataframe['return'])
+        print sharpe
         top.append(sharpe)
 
     # print top
@@ -341,6 +344,12 @@ def update_liquidity_risk():
     source_liquidity_risk.data = {'date': df.index,
                                   'risk': df[col_name]}
 
+def update_min_liquidity():
+    print("update minute liquidity")
+    fname = '%s/min_liquidity.xlsx'%(const.DATA_DIR)
+    df = pd.read_excel(fname)
+    source_min_liquidity.data = {'date': df.index, 'liquidity': df['liquidity']}
+
 def update_mean_line():
     print("update mean line")
     data_df = mean_line.get_dataframe()
@@ -400,10 +409,11 @@ def update_all():
     update_volume_table()
     update_eyby()
     update_industry_corr()
+    update_min_liquidity()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
-time_text = TextInput(value="2002-01-01", title="开始时间（例如：20050101或2005-01-01）", width=300)
+time_text = TextInput(value="2005-01-01", title="开始时间（例如：20050101或2005-01-01）", width=300)
 time_text.on_change('value', lambda attr, old, new: update_all())
 today = (datetime.datetime.today() - datetime.timedelta(1))
 time_end_text = TextInput(value=today.strftime("%Y-%m-%d"), title="终止时间", width=300)
@@ -530,6 +540,14 @@ plot_liquidity_risk.title.text_font = 'Microsoft Yahei'
 plot_liquidity_risk.title.text = u'股票流动性风险'
 plot_liquidity_risk.vbar(x='date', top='risk', bottom=0, width=1, source=source_liquidity_risk)
 
+plot_min_liquidity = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_min_liquidity.yaxis.minor_tick_line_color = None
+plot_min_liquidity.title.text_font_size = '15pt'
+plot_min_liquidity.title.text_font = 'Microsoft Yahei'
+plot_min_liquidity.title.text = u'沪深300分钟级股票流动性风险'
+plot_min_liquidity.vbar(x='date', top='liquidity', bottom=0, width=1, source=source_min_liquidity)
+
+
 '''
 plot_mean_line = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_mean_line.title.text_font_size = '15pt'
@@ -591,10 +609,10 @@ liquidity_row = row(liquidity_select, index_select)
 
 inputs = widgetbox(time_text, time_end_text, asset_select)
 
-curdoc().add_root(column(inputs, plot_sharpe, plot_momentum, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
+curdoc().add_root(column(inputs, plot_momentum, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
                          plot_eyby, plot_consistency, plot_industry_corr,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
-                         liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
+                         liquidity_asset, plot_liquidity, plot_min_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, plot_blank))
 # curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"

@@ -21,17 +21,21 @@ def add_row(date):
     '''
     codes = get_codes('881001.WI')
     everyday = pd.read_excel('D:/everyday.xlsx', index_col=0)
-    for code in codes[:1]:
-        print('updating %s...'%(code))
+    for code in codes:
         fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
         df = pd.read_excel(fname, index_col=0)
         add_df = everyday.loc[code].to_frame().transpose()
+        add_df['date'] = pd.to_datetime([date])
         add_df.set_index('date', inplace=True)
-        df = df.append(add_df)
-        print df.tail()
-        df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
-        df.index = pd.to_datetime(df.index)
-        df.to_excel(fname)
+        # print add_df
+        if add_df.index[0] > df.index[-1]:
+            print('updating %s...'%(code))
+            df = df.append(add_df)
+            df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+            df.index = pd.to_datetime(df.index)
+            # print df.tail()
+            df.to_excel(fname)
+            # break
 
 def add_column(field):
     # w.start()
@@ -316,8 +320,8 @@ def delete_old_files():
         os.remove(fname)
 
 def main():
-    update_all("881001.WI")
-    # add_row('2017-06-14')
+    # update_all("881001.WI")
+    add_row('2018-03-22')
     # delete_old_files()
     get_history_turnover()
     files = ['881001.WI', '399006.SZ', '399005.SZ',

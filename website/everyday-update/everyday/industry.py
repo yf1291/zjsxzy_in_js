@@ -35,6 +35,8 @@ def append_data(codes,
             end_date = datetime.datetime.today()
         if os.path.exists(fname):
             old_df = pd.read_excel(fname, index_col=0)
+            if 'outmessage' in old_df.columns:
+                del old_df['outmessage']
             start_date = old_df.index[-1] + datetime.timedelta(1)
             if start_date > end_date:
                 continue
@@ -66,6 +68,7 @@ def get_dataframe():
     pnl = get_panel()
     pnl.ix[:, :, 'return'] = pnl.minor_xs('close').pct_change()
     df = pnl.minor_xs('return')
+    # df = df.dropna()
     # print df.tail()
 
     rolled_df = utils.roll(df, 60)
@@ -92,8 +95,19 @@ def correlation():
     cor_df = cor_df.dropna()
     cor_df.to_excel('%s/industry_corr.xlsx'%(const.DATA_DIR))
 
+def download_from_excel(codes):
+    df = pd.read_excel('D:/ci.xlsx')
+    vdf = pd.read_excel('D:/ci_vol.xlsx')
+    for code in codes:
+        print code
+        temp = pd.DataFrame({'close': df[code], 'volume': df[code]})
+        temp = temp.replace([0.0], np.NAN)
+        fname = '%s/%s.xlsx'%(INDEX_DIR, code)
+        temp.to_excel(fname)
+
 def main():
-    append_data(codes, fields)
+    # append_data(codes, fields)
+    download_from_excel(codes)
 
 if __name__ == '__main__':
     # download_data(codes, fields)

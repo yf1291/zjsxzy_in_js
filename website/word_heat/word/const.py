@@ -17,3 +17,5 @@ WALLSTCN_MODEL = "D:/workspace/model/text.model"
 ASSET_CLASS_DIR = "%s/asset-class"%(DATA_DIR)
 TOPIC_CLASS_DIR = '%s/topic-class'%(DATA_DIR)
 TOPIC_NUMBER = 100
+WORDS_FILES = '%s/words.txt'%(WORD_HEAT_DIR)
+WEI_INDEX_DIR = 'D:/Data/wei_index'
