@@ -16,6 +16,7 @@ import vix.volatility as volatility
 import vix.correlation as correlation
 
 source_vol = ColumnDataSource(data=dict(date=[], vol=[]))
+source_vol2 = ColumnDataSource(data=dict(date=[], vol=[]))
 source_cor = ColumnDataSource(data=dict(date=[], cor=[]))
 source_table = ColumnDataSource(data=dict())
 
@@ -25,6 +26,11 @@ def update_data():
     source_vol.data = source_vol.from_df(df)
     plot_vol.title.text = asset_select.value
 
+    asset = const.REV_NAMES[asset_select2.value]
+    df = volatility.get_dataframe(asset)
+    source_vol2.data = source_vol.from_df(df)
+    plot_vol2.title.text = asset_select2.value
+
 def update_correlation():
     asset1 = const.REV_NAMES[asset_select.value]
     asset2 = const.REV_NAMES[asset_select2.value]
@@ -33,9 +39,12 @@ def update_correlation():
     plot_cor.title.text = asset_select.value + " v.s. " + asset_select2.value
 
 def calculate_mean():
-    df = pd.read_excel("%s/correlation.xlsx"%(const.DATA_DIR))
+    df = pd.read_excel("%s/correlation.xlsx"%(const.DATA_DIR), index_col=None)
+    df = pd.DataFrame(df.index, columns=['Name'], index=df.index).join(df)
     df = df.fillna('')
+    df['Name'] = [const.NAMES[x] for x in df['Name']]
     source_table.data = source_table.from_df(df)
+    # print source_table.data
     # plot_blank.title.text = "Mean Correlation of All: %.2f"%(val)
 
 def update_all():
@@ -54,7 +63,7 @@ asset_selections = const.NAMES.values()
 asset_select = Select(value='China ETF Volatility Index', title='Choose VIX Index', width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_all())
 asset_select2 = Select(value='Emerging Markets ETF Volatility Index', title='Choose another VIX Index', width=300, options=asset_selections)
-asset_select2.on_change('value', lambda attr, old, new: update_correlation())
+asset_select2.on_change('value', lambda attr, old, new: update_all())
 update_button = Button(label=u'Update Data', width=300, button_type="success")
 update_button.on_click(download_data)
 
@@ -65,6 +74,12 @@ plot_vol.title.text_font_size = "15pt"
 plot_vol.yaxis.minor_tick_line_color = None
 plot_vol.title.text_font = "Microsoft YaHei"
 
+plot_vol2 = figure(plot_height=400, plot_width=1000, tools=tools, title='Emerging Markets ETF Volatility Index', x_axis_type='datetime')
+plot_vol2.line('date', 'vol', source=source_vol2, line_width=3, line_alpha=0.6)
+plot_vol2.title.text_font_size = "15pt"
+plot_vol2.yaxis.minor_tick_line_color = None
+plot_vol2.title.text_font = "Microsoft YaHei"
+
 plot_cor = figure(plot_height=400, plot_width=1000, tools=tools,
                   title='China ETF Volatility Index v.s. Emerging Markets ETF Volatility Index', x_axis_type='datetime')
 plot_cor.line('date', 'cor', source=source_cor, line_width=3, line_alpha=0.6)
@@ -72,8 +87,8 @@ plot_cor.title.text_font_size = "15pt"
 plot_cor.yaxis.minor_tick_line_color = None
 plot_cor.title.text_font = "Microsoft YaHei"
 
-columns = [TableColumn(field=x, title=x) for x in const.NAMES.keys()]
-data_table = DataTable(source=source_table, columns=columns, width=900)
+columns = [TableColumn(field='Name', title='名称')] + [TableColumn(field=x, title=x) for x in const.NAMES.keys()]
+data_table = DataTable(source=source_table, columns=columns, width=1000)
 
 plot_blank = figure(plot_height=50, plot_width=1000, tools=[])
 plot_blank.title.text_font_size = "15pt"
@@ -83,5 +98,5 @@ inputs = widgetbox(update_button, asset_select, asset_select2)
 
 update_all()
 
-curdoc().add_root(column(inputs, plot_vol, plot_cor, data_table, plot_blank))
+curdoc().add_root(column(inputs, plot_vol, plot_vol2, plot_cor, data_table, plot_blank))
 curdoc().title = u"VIX Summary"

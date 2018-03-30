@@ -34,5 +34,5 @@ NAMES = {
 }
 REV_NAMES = {value: key for key, value in NAMES.iteritems()}
 
-start_date = "2012-01-01"
+start_date = "2000-01-01"
 window = 61

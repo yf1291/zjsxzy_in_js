@@ -48,10 +48,10 @@ def download_data(symbol,
         start_date = utils.next_date(df['date'].iloc[-1])
         app_df = download_wind_data(symbol, start_date, end_date)
         df = df.append(app_df)
-        # df.to_csv(fname, index=False)
+        df.to_csv(fname, index=False)
     else:
         df = download_wind_data(symbol, start_date, end_date)
-        # df.to_csv(fname, index=False)
+        df.to_csv(fname, index=False)
 
     # w.start()
     # raw_data = w.wsd(symbol, "close", beginTime=start_date, endTime=end_date)
@@ -65,16 +65,16 @@ def download_data(symbol,
 def download_all(symbols,
                 start_date="2000-01-01",
                 end_date=datetime.datetime.today().strftime("%Y-%m-%d")):
-    df = pd.read_excel('D:/wind_data.xlsx')
+    # df = pd.read_excel('D:/wind_data.xlsx')
     for symbol in symbols:
         print symbol
-        out = df[[symbol]].copy()
-        out.columns = ['close']
-        out['date'] = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
-        out = out.replace([0.0], np.NAN)
-        fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
-        out.to_csv(fname, index=False)
-        # download_data(symbol, start_date=start_date, end_date=end_date)
+        # out = df[[symbol]].copy()
+        # out.columns = ['close']
+        # out['date'] = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+        # out = out.replace([0.0], np.NAN)
+        # fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
+        # out.to_csv(fname, index=False)
+        download_data(symbol, start_date=start_date, end_date=end_date)
 
 def get_component(symbols,
                   date=datetime.datetime.today().strftime("%Y-%m-%d")):

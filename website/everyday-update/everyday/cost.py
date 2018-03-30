@@ -320,8 +320,8 @@ def delete_old_files():
         os.remove(fname)
 
 def main():
-    # update_all("881001.WI")
-    add_row('2018-03-22')
+    update_all("881001.WI")
+    # add_row('2018-03-22')
     # delete_old_files()
     get_history_turnover()
     files = ['881001.WI', '399006.SZ', '399005.SZ',

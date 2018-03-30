@@ -106,8 +106,8 @@ def download_from_excel(codes):
         temp.to_excel(fname)
 
 def main():
-    # append_data(codes, fields)
-    download_from_excel(codes)
+    append_data(codes, fields)
+    # download_from_excel(codes)
 
 if __name__ == '__main__':
     # download_data(codes, fields)

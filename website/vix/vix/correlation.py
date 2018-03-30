@@ -9,7 +9,7 @@ import const
 def get_dataframe(asset1, asset2):
     df1 = volatility.get_dataframe(asset1)
     df2 = volatility.get_dataframe(asset2)
-    df1['cor'] = df1['vol'].rolling(window=const.window).corr(df2['vol'])
+    df1['cor'] = df1['vol'].pct_change().rolling(window=const.window).corr(df2['vol'].pct_change())
     return pd.DataFrame({'cor': df1['cor']}, index=df1.index)
 
 def rank_percentile(array):
@@ -30,12 +30,14 @@ def all_mean():
             elif i < j:
                 df1 = volatility.get_dataframe(asset1)
                 df2 = volatility.get_dataframe(asset2)
-                corrs = df1['vol'].rolling(window=const.window).corr(df2['vol'])
+                va, vb = df1['vol'].pct_change(), df2['vol'].pct_change()
+                corrs = va.rolling(window=const.window).corr(vb)
                 val = rank_percentile(corrs)
             else:
                 df1 = volatility.get_dataframe(asset1)
                 df2 = volatility.get_dataframe(asset2)
-                val = df1['vol'][-const.window:].corr(df2['vol'][-const.window:], method='pearson')
+                va, vb = df1['vol'].pct_change(), df2['vol'].pct_change()
+                val = va[-const.window:].corr(vb[-const.window:], method='pearson')
             df.loc[asset1, asset2] = val
     df.to_excel("%s/correlation.xlsx"%(const.DATA_DIR), float_format='%.2f')
 
