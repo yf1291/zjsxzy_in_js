@@ -21,6 +21,7 @@ asset_files = [f for f in os.listdir(const.ASSET_DIR) if f.endswith('.csv')]
 assets = ['word'] + [a[:-4] for a in asset_files if not a.startswith('H11025')]
 with open(const.WORDS_FILES, 'r') as fp:
     words = [w.rstrip().decode('utf-8') for w in fp.readlines()]
+words = words[1:]
 
 source = ColumnDataSource(data=dict(date=[], ts=[]))
 source_absolute = ColumnDataSource(data=dict(date=[], ts=[]))

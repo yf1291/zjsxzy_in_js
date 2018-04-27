@@ -48,10 +48,10 @@ def main():
     for word in words:
         res = search_name(word)
         word = word.strip().decode('utf-8')
-        print(word)
         if res == None:
             print('error')
-
+            continue
+        print word
         df = pd.DataFrame(res['yd'])
         df.index = pd.to_datetime(df['daykey'])
         fname = '%s/%s_yd.xlsx'%(DATA_DIR, word)

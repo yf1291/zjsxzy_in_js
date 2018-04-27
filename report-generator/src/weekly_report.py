@@ -207,7 +207,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180326', u'稳进7号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180423', u'稳进7号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']

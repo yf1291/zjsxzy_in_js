@@ -95,7 +95,7 @@ def get_word_heat(key_word,
     df.index = pd.to_datetime(df['date'], format="%Y-%m-%d")
     df.sort_index(inplace=True)
     # df = df[df.index >= '2016-01-01']
-    print df.tail()
+    # print df.tail()
 
     heat_df = pd.DataFrame({"date": heat_count.keys(),
                             "absolute": heat_count.values(),
@@ -104,7 +104,7 @@ def get_word_heat(key_word,
     heat_df.index = heat_df["date"].map(lambda x: datetime.datetime.strptime(x, "%Y-%m-%d"))
     heat_df.sort_index(inplace=True)
     heat_df['total'] = df['count']
-    print heat_df.tail()
+    # print heat_df.tail()
     # 滚动k日
     heat_df.loc[:, 'total'] = heat_df['total'].rolling(window=look_back).sum()
     heat_df.loc[:, 'absolute'] = heat_df['absolute'].rolling(window=look_back).sum()
@@ -117,9 +117,13 @@ def get_word_heat(key_word,
 def calculate_words():
     with open('%s/words.txt'%(const.WORD_HEAT_DIR), 'r') as f:
         words = [w.strip().decode('utf-8') for w in f.readlines()]
+    # print words
     for word in words:
-        print word
-        get_word_heat(word)
+        try:
+            # print word
+            get_word_heat(word)
+        except Exception as e:
+            print(e)
 
 def rank_percentile(array):
     """
@@ -132,9 +136,11 @@ def rank_percentile(array):
 def get_words_percentile():
     with open('%s/words.txt'%(const.WORD_HEAT_DIR), 'r') as f:
         words = [w.strip().decode('utf-8') for w in f.readlines()]
+    words = words[1:]
     dic = {}
     wei = {}
     for word in words:
+        print word
         fname = '%s/%s_0.5.csv'%(const.ASSET_CLASS_DIR, word)
         df = pd.read_csv(fname)
         dic[word] = rank_percentile(df['weighted'])

@@ -77,6 +77,8 @@ asset_selections = ASSETS_NAME.values()
 index_selections = DEPARTMENT_NAME.values()
 industry_seletions = INDUSTRY_NAME.values()
 liquidity_selections = ['Amihud', 'Wu', 'Corwin and Schultz', 'Roll']
+dic_key = pd.read_excel('%s/wei_index_rank.xlsx'%(const.DATA_DIR), encoding='utf-8', converters={u'代码': str})
+dic_key = dic_key.set_index(u'代码')
 
 source_price = ColumnDataSource(data=dict(date=[], close=[]))
 source_sharpe = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], text=[], sharpe=[], color=[], text_pos=[]))
@@ -97,6 +99,8 @@ source_eyby = ColumnDataSource(data=dict(date=[], spread=[], close=[]))
 source_momentum = ColumnDataSource(data=dict(left=[], right=[], top=[], bottom=[], color=[], text=[], text_pos=[], momentum=[]))
 source_industry_corr = ColumnDataSource(data=dict(date=[], corr=[], median=[]))
 source_min_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
+source_wei_table = ColumnDataSource(data=dict())
+source_wei_index = ColumnDataSource(data=dict(date=[], val=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -108,7 +112,7 @@ def time2start_date(t):
         return datetime.datetime.strptime(t, "%Y%m%d")
 
 def update_data():
-    print("update data")
+    # print("update data")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
@@ -128,12 +132,12 @@ def update_data():
     plot_mom.title.text = asset_select.value + u"动量"
 
 def update_momentum_statistics():
-    print('update momentum statistics')
+    # print('update momentum statistics')
     plot_momentum.title.text = u"计算中..."
     momM, momQ, momY = [], [], []
     yesterday = datetime.datetime.today() - datetime.timedelta(days=1)
     for asset in asset_selections:
-        print(asset)
+        # print(asset)
         symbol = ASSETS_REV_NAME[asset]
         fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
         if not os.path.exists(fname):
@@ -190,7 +194,7 @@ def update_momentum_statistics():
     source_momentum.data = source_momentum.from_df(df)
 
 def update_statistics():
-    print("update statistics")
+    # print("update statistics")
     plot_sharpe.title.text = u"计算中..."
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
@@ -202,7 +206,7 @@ def update_statistics():
     color = COLORS
 
     for asset in asset_selections:
-        print(asset)
+        # print(asset)
         symbol = ASSETS_REV_NAME[asset]
         fname = "%s/%s.csv"%(const.DATA_DIR, symbol)
         if not os.path.exists(fname):
@@ -215,7 +219,7 @@ def update_statistics():
         dataframe.dropna(inplace=True)
         # print dataframe.head()
         sharpe = utils.get_sharpe_ratio(dataframe['return'])
-        print sharpe
+        # print sharpe
         top.append(sharpe)
 
     # print top
@@ -233,7 +237,7 @@ def update_statistics():
     source_sharpe.data = source_sharpe.from_df(df)
 
 def update_momentum():
-    print("update momentum")
+    # print("update momentum")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
@@ -242,7 +246,7 @@ def update_momentum():
     source_mom.data = source_mom.from_df(data_df)
 
 def update_volatility():
-    print("update volatility")
+    # print("update volatility")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol = ASSETS_REV_NAME[asset_select.value]
@@ -253,7 +257,7 @@ def update_volatility():
         plot_vol.line(x='days', y='vol', source=source_vol, line_width=5, line_alpha=0.6, color=ASSETS_COLOR[asset_select.value])
 
 def update_correlation():
-    print("update correlation")
+    # print("update correlation")
     start_date = time2start_date(time_text.value)
     end_date = time2start_date(time_end_text.value)
     symbol1 = asset_text_1.value
@@ -264,7 +268,7 @@ def update_correlation():
     source_cor.data = source_cor.from_df(data_df)
 
 def update_cost(industry=False):
-    print("update cost")
+    # print("update cost")
     if not industry:
         index_code = DEPARTMENT_REV_NAME[department_select.value]
         name = department_select.value
@@ -321,7 +325,7 @@ def update_cost(industry=False):
                                                     u"偏离均值%.2f个标准差"%(prof_dev_value)]}
 
 def update_liquidity():
-    print("update liquidity")
+    # print("update liquidity")
     # fname = '%s/liquidity.xlsx'%(const.DATA_DIR)
     symbol = liquidity_asset.value
     fname = '%s/%s.csv'%(const.DATA_DIR, symbol)
@@ -337,7 +341,7 @@ def update_liquidity():
     source_liquidity.data = {'date': df.index.values, 'liquidity': df['liquidity'].values}
 
 def update_liquidity_risk():
-    print("update liquidity risk")
+    # print("update liquidity risk")
     fname = '%s/amihud_liquidity.xlsx'%(const.DATA_DIR)
     df = pd.read_excel(fname)
     col_name = '%s_%s'%(DEPARTMENT_ENG_NAME[DEPARTMENT_REV_NAME[index_select.value]], liquidity_select.value.lower())
@@ -345,31 +349,32 @@ def update_liquidity_risk():
                                   'risk': df[col_name]}
 
 def update_min_liquidity():
-    print("update minute liquidity")
+    # print("update minute liquidity")
     fname = '%s/min_liquidity.xlsx'%(const.DATA_DIR)
     df = pd.read_excel(fname)
     source_min_liquidity.data = {'date': df.index, 'liquidity': df['liquidity']}
 
 def update_mean_line():
-    print("update mean line")
+    # print("update mean line")
     data_df = mean_line.get_dataframe()
     data_df = data_df[data_df.index >= '2016-01-01']
     source_mean_line.data = source_mean_line.from_df(data_df)
 
 def update_industry_consistency():
-    print("update industry consistency")
-    data_df = industry.get_dataframe()
+    # print("update industry consistency")
+    # data_df = industry.get_dataframe()
+    data_df = pd.read_excel('%s/consistency.xlsx'%(const.DATA_DIR), index_col=0)
     data_df = data_df[data_df.index >= '2015-01-01']
     source_consistency.data = source_consistency.from_df(data_df)
 
 def update_concentration():
-    print("update concentraion")
+    # print("update concentraion")
     data_df = concentration.get_dataframe()
     data_df['date'] = data_df.index
     source_concentration.data = source_concentration.from_df(data_df)
 
 def update_volume_table():
-    print("update volume table")
+    # print("update volume table")
     df = pd.read_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
     source_volume_table.data = {
         'sec_name': df['sec_name'],
@@ -379,8 +384,17 @@ def update_volume_table():
         'industry': df['industry'],
     }
 
+def update_wei_index_table():
+    # print('update stock wei index table')
+    df = pd.read_excel('%s/wei_index_rank.xlsx'%(const.DATA_DIR), encoding='utf-8', converters={u'代码': str})
+    source_wei_table.data = {
+        'code': df[u'代码'],
+        'name': df[u'名称'],
+        'percent': df[u'百分位'],
+    }
+
 def update_eyby():
-    print("update eyby")
+    # print("update eyby")
     df = pd.read_excel('%s/EYBY.xlsx'%(const.DATA_DIR))
     source_eyby.data = {
         'date': df.index,
@@ -389,12 +403,26 @@ def update_eyby():
     }
 
 def update_industry_corr():
+    # print('update industry correlation')
     df = pd.read_excel('%s/industry_corr.xlsx'%(const.DATA_DIR))
     source_industry_corr.data = {
         'date': df.index,
         'corr': df['corr'].rolling(window=5).mean(),
         'median': df['median'].rolling(window=5).mean()
     }
+
+def update_wei_index():
+    # print('update wei index')
+    code = wei_stock_text.value
+    if code in dic_key.index:
+        name = dic_key.loc[code][u'名称']
+        fname = '%s/%s-%s.xlsx'%(const.SEARCH_DIR, code, name)
+        df = pd.read_excel(fname)
+        df = df.dropna()
+        source_wei_index.data = {'date': df['day_key'], 'val': df['value']}
+        plot_wei_index.title.text = name
+    else:
+        plot_wei_index.title.text = u'该股票微指数数据不存在'
 
 def update_all():
     update_statistics()
@@ -410,6 +438,8 @@ def update_all():
     update_eyby()
     update_industry_corr()
     update_min_liquidity()
+    update_wei_index_table()
+    update_wei_index()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -438,6 +468,14 @@ volume_columns = [
     TableColumn(field='industry', title=u'证券行业'),
 ]
 volume_data_table = DataTable(source=source_volume_table, columns=volume_columns, width=1000)
+wei_columns = [
+    TableColumn(field='code', title=u'代码'),
+    TableColumn(field='name', title=u'名称'),
+    TableColumn(field='percent', title=u'微指数当前百分位', formatter=NumberFormatter(format='0.00%')),
+]
+wei_data_table = DataTable(source=source_wei_table, columns=wei_columns, width=1000)
+wei_stock_text = TextInput(value='600519', title=u'股票代码', width=300)
+wei_stock_text.on_change('value', lambda attr, old, new: update_wei_index())
 # volume_data_table.title.text_font_size = 'Microsoft YaHei'
 # volume_data_table.title = u'成交量Top50股票列表'
 
@@ -594,6 +632,14 @@ plot_industry_corr.title.text_font = "Microsoft YaHei"
 plot_industry_corr.line('date', 'corr', source=source_industry_corr, line_width=3, legend=u'均值')
 plot_industry_corr.line('date', 'median', source=source_industry_corr, line_width=3, color='red', legend=u'中位数')
 
+plot_wei_index = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_wei_index.title.text = u'贵州茅台'
+plot_wei_index.title.text_font_size = '15pt'
+plot_wei_index.yaxis.minor_tick_line_color = None
+plot_wei_index.title.text_font = 'Microsoft Yahei'
+plot_wei_index.vbar(x='date', top='val', bottom=0, width=1, source=source_wei_index)
+# plot_wei_index.line('date', 'val', source=source_wei_index, line_width=3, legend=plot_wei_index.title.text)
+
 plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
 
 update_all()
@@ -613,6 +659,7 @@ curdoc().add_root(column(inputs, plot_momentum, plot_sharpe, plot_price, plot_mo
                          plot_eyby, plot_consistency, plot_industry_corr,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, plot_min_liquidity, liquidity_row, plot_liquidity_risk,
-                         plot_concentration, volume_data_table, plot_blank))
+                         plot_concentration, volume_data_table, wei_data_table, wei_stock_text, plot_wei_index,
+                         plot_blank))
 # curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"
