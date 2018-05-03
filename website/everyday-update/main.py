@@ -101,6 +101,7 @@ source_industry_corr = ColumnDataSource(data=dict(date=[], corr=[], median=[]))
 source_min_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
 source_wei_table = ColumnDataSource(data=dict())
 source_wei_index = ColumnDataSource(data=dict(date=[], val=[]))
+source_record_high_table = ColumnDataSource(data=dict())
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -375,12 +376,12 @@ def update_concentration():
 
 def update_volume_table():
     # print("update volume table")
-    df = pd.read_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
+    df = pd.read_excel('%s/volume.xlsx'%(const.DATA_DIR))
     source_volume_table.data = {
         'sec_name': df['sec_name'],
-        'wind_code': df.index,
+        'wind_code': df['wind_code'],
         'volume': df['volume'],
-        'turnover': df['turnover'],
+        'turnover': df['turnover']/100,
         'industry': df['industry'],
     }
 
@@ -391,6 +392,19 @@ def update_wei_index_table():
         'code': df[u'代码'],
         'name': df[u'名称'],
         'percent': df[u'百分位'],
+    }
+
+def update_record_high_table():
+    df = pd.read_excel('%s/record_high.xlsx'%(const.DATA_DIR))
+    df = df.sort_values(60, ascending=False)
+    source_record_high_table.data = {
+        'sec_name': df['sec_name'],
+        'wind_code': df['S_INFO_WINDCODE'],
+        'industry': df['industry'],
+        'month': df[20],
+        'quarter': df[60],
+        'half': df[121],
+        'year': df[243],
     }
 
 def update_eyby():
@@ -440,6 +454,7 @@ def update_all():
     update_min_liquidity()
     update_wei_index_table()
     update_wei_index()
+    update_record_high_table()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
 asset_select.on_change('value', lambda attr, old, new: update_data())
@@ -461,13 +476,15 @@ liquidity_select.on_change('value', lambda attr, old, new: update_liquidity_risk
 index_select = Select(value=u'万得全A', title=u'选择指数', width=300, options=index_selections)
 index_select.on_change('value', lambda attr, old, new: update_liquidity_risk())
 volume_columns = [
-    TableColumn(field='sec_name', title=u'证券简称'),
     TableColumn(field='wind_code', title=u'证券代码'),
+    TableColumn(field='sec_name', title=u'证券简称'),
+    TableColumn(field='industry', title=u'证券行业'),
     TableColumn(field='volume', title=u'成交量', formatter=NumberFormatter(format='$0,0.00')),
     TableColumn(field='turnover', title=u'换手率', formatter=NumberFormatter(format='0.00%')),
-    TableColumn(field='industry', title=u'证券行业'),
 ]
 volume_data_table = DataTable(source=source_volume_table, columns=volume_columns, width=1000)
+# volume_data_table.title.text_font_size = 'Microsoft YaHei'
+# volume_data_table.title = u'成交量Top50股票列表'
 wei_columns = [
     TableColumn(field='code', title=u'代码'),
     TableColumn(field='name', title=u'名称'),
@@ -476,8 +493,16 @@ wei_columns = [
 wei_data_table = DataTable(source=source_wei_table, columns=wei_columns, width=1000)
 wei_stock_text = TextInput(value='600519', title=u'股票代码', width=300)
 wei_stock_text.on_change('value', lambda attr, old, new: update_wei_index())
-# volume_data_table.title.text_font_size = 'Microsoft YaHei'
-# volume_data_table.title = u'成交量Top50股票列表'
+record_high_columns = [
+    TableColumn(field='wind_code', title=u'证券代码'),
+    TableColumn(field='sec_name', title=u'证券简称'),
+    TableColumn(field='industry', title=u'证券行业'),
+    TableColumn(field='month', title=u'一个月内创新高次数'),
+    TableColumn(field='quarter', title=u'一个季度内创新高次数'),
+    TableColumn(field='half', title=u'半年内创新高次数'),
+    TableColumn(field='year', title=u'一年内创新高次数'),
+]
+record_high_data_table = DataTable(source=source_record_high_table, columns=record_high_columns, width=1000)
 
 tools = "pan,wheel_zoom,box_select,reset"
 plot_price = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
@@ -660,6 +685,6 @@ curdoc().add_root(column(inputs, plot_momentum, plot_sharpe, plot_price, plot_mo
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
                          liquidity_asset, plot_liquidity, plot_min_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, wei_data_table, wei_stock_text, plot_wei_index,
-                         plot_blank))
+                         record_high_data_table, plot_blank))
 # curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"

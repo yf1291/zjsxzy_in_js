@@ -13,6 +13,7 @@ import FOF.const as const
 import FOF.data as data
 import FOF.correlation as correlation
 import FOF.comp as comp
+import FOF.stock_holding as stock_holding
 
 from bokeh.io import curdoc
 from bokeh.layouts import row, widgetbox, column
@@ -60,6 +61,7 @@ source_cor = ColumnDataSource(data=dict(days=[], cor=[], max=[], min=[], median=
 source_comp_nav = ColumnDataSource(data=dict(date=[], nav=[]))
 source_comp_position = ColumnDataSource(data=dict(date=[], pos=[]))
 source_comp_table = ColumnDataSource(data=dict())
+source_stock_holding_table = ColumnDataSource(data=dict())
 
 def scale_filter(df):
     if scale_select.value == u'全部':
@@ -141,22 +143,29 @@ def get_rank(df, ret_df, empyrical_df):
     df = df.dropna()
     df.loc[:, 'max percentage'] = 1 - df.loc[:, 'max percentage']
     df = df.sort_values('current return', ascending=False)
-    # df.to_excel('%s/result.xlsx'%(DATA_DIR), index=False)
+    # df.to_excel('%s/result.xlsx'%(const.WEBSITE_DIR), index=False)
     return df
 
 def update_table_data(df):
-    # df = pd.read_excel('%s/result.xlsx'%(DATA_DIR))
+    # df = pd.read_excel('%s/result.xlsx'%(const.WEBSITE_DIR))
+    # df['max percentage date'] = df['max percentage date'].map(lambda x: x.strftime('%Y-%m-%d'))
+    # source_table.data = source_table.from_df(df)
+    # print df['netasset'].values
+    # df.index = range(df.shape[0])
+    # print df
+    # source_table.data = source_table.from_df(df[['sec_name', 'wind_code', 'fundmanager', 'netasset']])
     source_table.data = {
         'sec_name': df['sec_name'].values,
         'wind_code': df['wind_code'].values,
         'fundmanager': df['fundmanager'].values,
-        'netasset': df['netasset'].values,
-        'current return': df['current return'].values,
+        'netasset': df['netasset'].tolist(),
+        'current return': df['current return'].tolist(),
         # 'volatility': df['volatility'].values,
-        'omega': df['omega'].values,
-        'max percentage': df['max percentage'].values,
+        'omega': df['omega'].tolist(),
+        'max percentage': df['max percentage'].tolist(),
         'max percentage date': df['max percentage date'].map(lambda x: x.strftime('%Y-%m-%d')).values
     }
+    # print source_table.data
 
 def select_fund():
     nav_title = plot_nav.title.text
@@ -183,18 +192,25 @@ def select_fund():
         empyrical_df = pd.read_excel('%s/mixed_empyrical.xlsx'%(const.FOF_DIR))
         df = mixed_fund.filter_mixed(mixed_df)
     # df.to_excel('./temp1.xlsx')
+    print('type filter')
     df = type_filter(df)
     # df.to_excel('./temp2.xlsx')
+    print('scale filter')
     df = scale_filter(df)
     # df.to_excel('./temp3.xlsx')
     # ret_df = pnl[df['wind_code']].minor_xs(time_dict[time_select.value])
+    print('calc rank')
     df = get_rank(df, ret_df, empyrical_df)
-    df.to_excel('./temp4.xlsx')
+    # df.to_excel('./temp4.xlsx')
+    print('update table')
     update_table_data(df)
+    print('done')
+    # print df
     plot_nav.title.text = nav_title
     # plot_return.title.text = ret_title
 
 def update_correlation():
+    print('update correlation')
     fund1, fund2 = fund1_text.value, fund2_text.value
     data_df = correlation.get_dataframe(fund1, fund2)
     plot_correlation.title.text = fund1 + u"与" + fund2 + u"相关性锥"
@@ -208,10 +224,18 @@ def update_comp_table():
     df.index = range(df.shape[0])
     source_comp_table.data = source_comp_table.from_df(df)
 
+def update_stock_holding():
+    print('update stock holding')
+    stock = stock_text.value
+    df = stock_holding.quarter_stock_holding(stock)
+    df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
+    # df.to_excel('%s/stock_holding.xlsx'%(const.WEBSITE_DIR))
+    source_stock_holding_table.data = source_stock_holding_table.from_df(df)
+
 def update_comp():
     plot_comp_nav.title.text = comp_select.value + u'基金净值'
     plot_comp_pos.title.text = comp_select.value + u'股票仓位'
-    print comp_select.value
+    # print comp_select.value
     ret = ret_df[comp_select.value]
     acc_ret = (1 + ret).cumprod()
     acc_ret = acc_ret[acc_ret != 1]
@@ -259,6 +283,16 @@ comp_columns = [
     TableColumn(field='pos', title=u'仓位变化', formatter=NumberFormatter(format='0.00%'))
 ]
 comp_data_table = DataTable(source=source_comp_table, columns=comp_columns, width=900)
+stock_holding_columns = [
+    TableColumn(field='ReportDate', title=u'日期'),
+    TableColumn(field='FundCode', title=u'基金代码'),
+    TableColumn(field='FundAbbr', title=u'基金名称'),
+    TableColumn(field='SecuCode', title=u'股票代码'),
+    TableColumn(field='SecuAbbr', title=u'股票名称'),
+    TableColumn(field='SharesHolding', title=u'当前持仓股数'),
+    TableColumn(field='Diff', title=u'持仓变动'),
+]
+stock_holding_table = DataTable(source=source_stock_holding_table, columns=stock_holding_columns, width=900)
 
 tools = "pan,wheel_zoom,box_select,reset"
 plot_nav = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
@@ -274,6 +308,8 @@ plot_nav.title.text_font = "Microsoft YaHei"
 # plot_return.yaxis.minor_tick_line_color = None
 # plot_return.title.text_font = "Microsoft YaHei"
 
+stock_text = TextInput(value='600519', title=u'股票代码查询', width=200)
+stock_text.on_change('value', lambda attr, old, new: update_stock_holding())
 fund1_text = TextInput(value='070099.OF', title=u'基金1Wind代码', width=200)
 fund2_text = TextInput(value='070013.OF', title=u'基金2Wind代码', width=200)
 corr_button = Button(label=u"计算相关性", width=200, button_type="success")
@@ -314,7 +350,8 @@ update_correlation()
 update_comp()
 update_comp_table()
 select_fund()
+update_stock_holding()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, corr_col, plot_correlation,
+curdoc().add_root(column(row(inputs, table), plot_nav, stock_text, stock_holding_table, corr_col, plot_correlation,
                          widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
 curdoc().title = u'基金筛选'

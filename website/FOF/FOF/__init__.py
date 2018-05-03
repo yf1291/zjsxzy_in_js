@@ -5,3 +5,4 @@ from . import mixed_fund
 from . import stock_fund
 from . import utils
 from . import comp
+from . import stock_holding

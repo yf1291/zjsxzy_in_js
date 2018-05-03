@@ -135,7 +135,7 @@ def get_stock_price_panel():
 
 def main():
     get_stock_price_panel()
-    get_stock_information()
+    # get_stock_information()
     download_all(ASSETS_NAME.keys())
 
 if __name__ == "__main__":

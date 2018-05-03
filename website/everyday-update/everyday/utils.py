@@ -1,3 +1,4 @@
+# encoding: utf-8
 import empyrical
 from WindPy import w
 import numpy as np
@@ -6,6 +7,7 @@ import os
 import datetime
 
 import const
+import database
 
 w.start()
 
@@ -67,3 +69,14 @@ def get_index_component(index_code):
 
 def next_date(date):
     return pd.to_datetime(date) + datetime.timedelta(1)
+
+def get_stock_history_price_from_wind():
+    '''
+    从万得RDF数据库获得所有股票历史复权价格
+    '''
+    query = 'select t.trade_dt, t.s_info_windcode, t.s_dq_adjclose \
+             from wind.AShareEODPrices t'
+    df = database.DataFrame_from_wind(query)
+    df['TRADE_DT'] = pd.to_datetime(df['TRADE_DT'], format='%Y%m%d')
+    df = df.pivot_table('S_DQ_ADJCLOSE', index=['TRADE_DT', 'S_INFO_WINDCODE']).unstack()
+    return df
