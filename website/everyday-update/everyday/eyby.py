@@ -10,11 +10,11 @@ fname = '%s/EYBY.xlsx'%(const.DATA_DIR)
 
 def download_data(start_date, end_date):
     w.start()
-    data = w.wsd('000001.SH', 'pe_ttm', start_date, end_date)
+    data = w.wsd('881001.WI', 'pe_ttm', start_date, end_date)
     pe = utils.wind2df(data)
-    data = w.wsd('065.CS', 'ytm_b', start_date, end_date, 'returnType=1')
+    data = w.wsd('CBA00101.CS', 'ytm_b', start_date, end_date, 'returnType=1')
     ytm = utils.wind2df(data)
-    data = w.wsd('000001.SH', 'close', start_date, end_date)
+    data = w.wsd('881001.WI', 'close', start_date, end_date)
     close = utils.wind2df(data)
     return pe, ytm, close
 
@@ -33,4 +33,5 @@ def update_data():
         df.to_excel(fname)
 
 if __name__ == '__main__':
+    # download_data('2000-01-01', '2018-05-10')
     update_data()

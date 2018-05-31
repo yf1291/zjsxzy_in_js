@@ -18,6 +18,8 @@ GOV_WORD_CNT_FILE = '%s/words/gov_word_count.pkl'%(WORK_DIR)
 GOV_WORD_CNT_CHECKED_FILE = '%s/words/gov_word_count_checked.txt'%(WORK_DIR)
 GOV_TOTAL_WORD_COUNT_FILE = "%s/words/gov_total_word_count.pkl"%(WORK_DIR)
 CCGP_DATA_DIR_DFGG_ZBGG = u'D:/Data/ccgp/地方公告/中标公告'
+WALLSTCN_MODEL = "D:/workspace/model/text.model"
+WEI_INDEX_DIR = 'D:/Data/wei_index'
 
 # DEPARTMENT = [u'安全监管总局', u'财政部', u'发展改革委', u'工业和信息化部', u'公安部', u'国防部',
 #               u'民政部', u'农业部', u'人力资源社会保障部', u'人民日报', u'商务部', u'食品药品监管总局', u'水利部',

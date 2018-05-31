@@ -115,7 +115,7 @@ def generate_rptdate(start_date):
     生成报告期
     """
     start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    years = range(2000, 2018)
+    years = range(2000, 2019)
     months = [3, 6, 9, 12]
     rptdates = []
     today = datetime.datetime.today()

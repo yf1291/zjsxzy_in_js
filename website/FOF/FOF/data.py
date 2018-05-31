@@ -156,9 +156,13 @@ def update_season_rpt(ticker, rptdates):
     fname = '%s/%s.xlsx'%(const.RPT_DIR, ticker)
     if not os.path.exists(fname):
         df = utils.download_season_rpt(ticker, rptdates)
-        df.to_excel(fname)
+        if df.shape[0] > 0:
+            df.to_excel(fname)
     else:
         df = pd.read_excel(fname, index_col=0)
+        if df.shape[0] == 0:
+            os.remove(fname)
+            return
         # df = df.dropna(how='all')
         # df.to_excel(fname)
         # if df.shape[0] == 1:
@@ -181,7 +185,8 @@ def update_season_rpt(ticker, rptdates):
                 return
         else:
             df = utils.download_season_rpt(ticker, rptdates)
-            df.to_excel(fname)
+            if df.shape[0] > 0:
+                df.to_excel(fname)
 
 def update_stock_season_rpt():
     stock_df = stock_fund.get_stock_fund()

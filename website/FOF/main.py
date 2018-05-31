@@ -62,6 +62,7 @@ source_comp_nav = ColumnDataSource(data=dict(date=[], nav=[]))
 source_comp_position = ColumnDataSource(data=dict(date=[], pos=[]))
 source_comp_table = ColumnDataSource(data=dict())
 source_stock_holding_table = ColumnDataSource(data=dict())
+source_stock_holding = ColumnDataSource(data=dict(date=[], hold=[]))
 
 def scale_filter(df):
     if scale_select.value == u'全部':
@@ -231,6 +232,8 @@ def update_stock_holding():
     df.index = df.index.map(lambda x: x.strftime('%Y-%m-%d'))
     # df.to_excel('%s/stock_holding.xlsx'%(const.WEBSITE_DIR))
     source_stock_holding_table.data = source_stock_holding_table.from_df(df)
+    df = stock_holding.quarter_sum_holding(stock)
+    source_stock_holding.data = {'date': df.index, 'hold': df['SharesHolding']}
 
 def update_comp():
     plot_comp_nav.title.text = comp_select.value + u'基金净值'
@@ -342,6 +345,13 @@ plot_comp_pos.yaxis.minor_tick_line_color = None
 plot_comp_pos.title.text_font_size = '15pt'
 plot_comp_pos.title.text_font = 'Microsoft Yahei'
 
+plot_stock_holding = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_stock_holding.line('date', 'hold', source=source_stock_holding, line_width=3, line_alpha=0.6)
+plot_stock_holding.yaxis.minor_tick_line_color = None
+plot_stock_holding.title.text_font_size = '15pt'
+plot_stock_holding.title.text_font = 'Microsoft Yahei'
+plot_stock_holding.title.text = u'公募基金重仓持股数量'
+
 inputs = widgetbox(invtype1_select, invtype2_select, scale_select, time_select, fund_button, fund_text)
 table = widgetbox(data_table)
 update_inputs()
@@ -352,6 +362,7 @@ update_comp_table()
 select_fund()
 update_stock_holding()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, stock_text, stock_holding_table, corr_col, plot_correlation,
+curdoc().add_root(column(row(inputs, table), plot_nav, stock_text, stock_holding_table, plot_stock_holding, 
+                         corr_col, plot_correlation,
                          widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
 curdoc().title = u'基金筛选'

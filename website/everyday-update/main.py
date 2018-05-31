@@ -646,7 +646,7 @@ plot_eyby.yaxis.minor_tick_line_color = None
 plot_eyby.title.text_font = "Microsoft YaHei"
 plot_eyby.title.text = u'股债相对收益率'
 plot_eyby.line('date', 'spread', source=source_eyby, line_width=2, color='red', legend=u'股债相对收益率')
-plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'上证综指')
+plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'万得全A')
 
 plot_industry_corr = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
 plot_industry_corr.yaxis.formatter = NumeralTickFormatter(format="0.00")

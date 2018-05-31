@@ -52,6 +52,7 @@ def main():
             print('error')
             continue
         print word
+        # print res
         df = pd.DataFrame(res['yd'])
         df.index = pd.to_datetime(df['daykey'])
         fname = '%s/%s_yd.xlsx'%(DATA_DIR, word)

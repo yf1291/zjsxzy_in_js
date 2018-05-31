@@ -13,25 +13,33 @@ def update_concentration():
     df = pd.read_excel(const.CAPITAL_CONCENTRATION, index_col=0)
     df = df.fillna(method='ffill')
     df = df[df.index >= '2000-01-01']
-    source_concentration.data = {'date': df.index, 'cap': df['cap'], 'p': df['close']}
+    source_concentration.data = {'date': df.index, 
+                                 'cap': df['cap'].rank(pct=True), 
+                                 'p': df['close']}
 
 source_skew = ColumnDataSource(data=dict(date=[], skew=[], p=[]))
 def update_skew():
     df = pd.read_excel(const.SKEWNESS, index_col=0)
     df = df[df.index >= '2000-01-01']
-    source_skew.data = {'date': df.index, 'skew': df['skew'], 'p': df['close']}
+    source_skew.data = {'date': df.index, 
+                        'skew': df['skew'].rank(pct=True), 
+                        'p': df['close']}
 
 source_corr = ColumnDataSource(data=dict(date=[], corr=[], p=[]))
 def update_corr():
     df = pd.read_excel(const.CORRELATION, index_col=0)
     df = df[df.index >= '2000-01-01']
-    source_corr.data = {'date': df.index, 'corr': df['correlation'], 'p': df['close']}
+    source_corr.data = {'date': df.index, 
+                        'corr': df['correlation'], 
+                        'p': df['close']}
 
 source_disp = ColumnDataSource(data=dict(date=[], disp=[], p=[]))
 def update_disp():
     df = pd.read_excel(const.DISPERSION, index_col=0)
     df = df[df.index >= '2000-01-01']
-    source_disp.data = {'date': df.index, 'disp': df['dispersion'], 'p': df['close']}
+    source_disp.data = {'date': df.index, 
+                        'disp': df['dispersion'], 
+                        'p': df['close']}
 
 def update_all():
     update_concentration()
@@ -41,7 +49,7 @@ def update_all():
 
 def get_plot(title, pct=False):
     tools = "pan,wheel_zoom,box_select,reset,hover"
-    plot = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime', toolbar_location='above')
+    plot = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime', toolbar_location='above')
     plot.title.text_font_size = "15pt"
     plot.title.text_font = "Microsoft YaHei"
     plot.extra_y_ranges = {'close': Range1d(start=0, end=7000)}
@@ -54,7 +62,7 @@ def get_plot(title, pct=False):
         plot.yaxis.formatter = NumeralTickFormatter(format='0.00')
     return plot
 
-plot_concentration = get_plot(u'资金集中度')
+plot_concentration = get_plot(u'资金集中度', pct=True)
 plot_concentration.line('date', 'cap', source=source_concentration, line_width=2, legend=u'资金集中度')
 plot_concentration.y_range = Range1d(0, 1)
 plot_concentration.line('date', 'p', source=source_concentration, y_range_name='close', line_width=1, color='red', legend=u'上证综指')
@@ -63,9 +71,9 @@ hover_concentration.tooltips = [(u'日期', '@date{%F}'), (u'集中度', '@cap{0
 hover_concentration.formatters = {'date': 'datetime'}
 hover_concentration.mode = 'mouse'
 
-plot_skew = get_plot('收益率偏度')
+plot_skew = get_plot('收益率偏度', pct=True)
 plot_skew.line('date', 'skew', source=source_skew, line_width=2, legend=u'收益率偏度')
-plot_skew.y_range = Range1d(-3, 5)
+plot_skew.y_range = Range1d(0, 1)
 plot_skew.line('date', 'p', source=source_skew, y_range_name='close', line_width=1, color='red', legend=u'上证综指')
 hover_skew = plot_skew.select(dict(type=HoverTool))
 hover_skew.tooltips = [(u'日期', '@date{%F}'), (u'偏度', '@skew{0.00}'), (u'上证综指', '@p{0000.00}')]

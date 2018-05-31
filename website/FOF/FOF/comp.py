@@ -39,8 +39,9 @@ def save_comp_rpt():
         dic = {}
         for f in funds:
             fname = '%s/%s.xlsx'%(const.RPT_DIR, f)
-            temp = pd.read_excel(fname, index_col=0)
-            dic[f] = temp
+            if os.path.exists(fname):
+                temp = pd.read_excel(fname, index_col=0)
+                dic[f] = temp
         pnl = pd.Panel(dic)
         pnl.to_pickle('%s/%s.pkl'%(const.COMP_RPT_DIR, c))
 
@@ -53,6 +54,8 @@ def get_comp_daily_return(comp_name):
     df = df.pct_change()
     fname = '%s/%s.pkl'%(const.COMP_RPT_DIR, comp_name)
     pnl = pd.read_pickle(fname)
+    if pnl.shape[2] == 0:
+        return None
     st2nav = pnl.minor_xs('prt_stocktonav')
     weight_df = pnl.minor_xs('prt_netasset')
     weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
@@ -90,6 +93,8 @@ def get_all_comp_daily_return():
     for c in comps:
         print c
         daily_return = get_comp_daily_return(c)
+        if daily_return is None:
+            continue
         dic[c] = daily_return
     df = pd.DataFrame(dic)
     df.to_excel('%s/comp_ret.xlsx'%(const.FOF_DIR), encoding='utf-8')
@@ -100,6 +105,8 @@ def get_comp_position(comp_name):
     '''
     fname = '%s/%s.pkl'%(const.COMP_RPT_DIR, comp_name)
     pnl = pd.read_pickle(fname)
+    if pnl.shape[2] == 0:
+        return None
     st2nav = pnl.minor_xs('prt_stocktonav')
     position_df = pnl.minor_xs('prt_netasset')
     position_df = position_df[st2nav > 60] # 股票仓位大于60%
@@ -116,6 +123,8 @@ def get_all_comp_position():
     for c in comps:
         print c
         position = get_comp_position(c)
+        if position is None:
+            continue
         dic[c] = position
     df = pd.DataFrame(dic)
     df.to_excel('%s/comp_position.xlsx'%(const.FOF_DIR), encoding='utf-8')
@@ -128,12 +137,14 @@ def comp_analysis(start_date='2017-07-01'):
     comp_pos = pd.read_excel('%s/comp_position.xlsx'%(const.FOF_DIR), index_col=0)
     wdf = pd.read_csv('%s/881001.WI.csv'%(const.INDEX_DIR), index_col=1)
     wseries = wdf.pct_change()[wdf.index >= start_date]['close']
+    wseries.index = pd.to_datetime(wseries.index)
     df = pd.DataFrame(index=comp_ret.columns, columns=['ret', 'vol', 'beta', 'pos'])
     for c in df.index:
         series = comp_ret[c]
         series = series[series.index >= start_date]
         df.loc[c, 'ret'] = (1 + series).cumprod()[-1] - 1
         df.loc[c, 'vol'] = empyrical.annual_volatility(series)
+        wseries = wseries[(wseries.index >= series.index[0]) & (wseries.index <= series.index[-1])]
         df.loc[c, 'beta'] = empyrical.beta(series, wseries)
         if comp_pos[c].shape[0] > 1 and comp_pos[c][-2] != 0:
             df.loc[c, 'pos'] = (comp_pos[c][-1] - comp_pos[c][-2]) / comp_pos[c][-2]
