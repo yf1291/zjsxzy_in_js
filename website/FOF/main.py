@@ -134,6 +134,7 @@ def get_rank(df, ret_df, empyrical_df):
     ret_df = ret_df[df['wind_code']]
     ret_df = ret_df.fillna(method='ffill')
     df.loc[:, 'current return'] = ret_df.values[-1]
+    # df.loc[:, 'sharpe'] = 
     # df.loc[:, 'volatility'] = ret_df.ix[-min(ret_df.shape[0], time_days[time_select.value]):].std().values
     omega_ratio = empyrical_df.loc[df['wind_code'], 'omega'].values
     df['omega'] = omega_ratio

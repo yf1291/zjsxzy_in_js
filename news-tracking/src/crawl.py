@@ -246,6 +246,7 @@ def crawl_circ(page_id=47):
 
 def main():
     node = get_latest_node()
+    print node
     crawl_wallst(node)
     crawl_gov.update()
 

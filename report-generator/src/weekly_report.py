@@ -85,6 +85,7 @@ def fund_position(df):
         name = df.loc[index, u'名称']
         ftype = df.loc[index, 'type']
         percent = df.loc[index, col_name]
+        # print name, ftype, percent
         if pd.isnull(name) or pd.isnull(percent):
             break
         if utils.hk_fund_name(name):
@@ -179,13 +180,16 @@ def finance_management(inv1_df, inv2_df):
 # 本期末账户状态
 def current_position(inv2_df, fund2_df, hold_df):
     hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
-    bond2 = bond2 * inv2_df.loc[u'基金', u'占净值比例']
+    # print hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2
+    # print bond2, inv2_df.loc[u'基金', u'占净值比例']
+    # bond2 = bond2 * inv2_df.loc[u'基金', u'占净值比例']
+    # if np.isnan(bond2):
+        # bond2 = 0
 
     content = []
     net_price = inv2_df.loc[u'资产总净值', u'市值（亿）']
     line = u'专户资产规模：%.4f亿元'%(net_price)
     content.append(line)
-    # print bond2
     if inv2_df.loc[u'债券', u'占净值比例'] > 0:
         bond2 += inv2_df.loc[u'债券', u'占净值比例']
         # print bond2
@@ -197,6 +201,7 @@ def current_position(inv2_df, fund2_df, hold_df):
     content.append(line)
     if inv2_df.loc[u'存款', u'占净值比例'] > 0:
         money2 += inv2_df.loc[u'存款', u'占净值比例']
+    # print bond2, money2, hk2, astock2 
     line = u'现金类配置规模：%.4f亿元'%(net_price*money2)
     content.append(line)
     line = u'杠杆率：100%'
@@ -207,7 +212,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180528', u'稳进7号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180716', u'精选FOF2号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']
