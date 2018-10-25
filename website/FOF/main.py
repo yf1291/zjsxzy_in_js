@@ -27,6 +27,15 @@ COMP_POS_FILE = '%s/comp_position.xlsx'%(const.FOF_DIR)
 ret_df = pd.read_excel(COMP_RET_FILE)
 pos_df = pd.read_excel(COMP_POS_FILE)
 comps = ret_df.columns.tolist()
+# comp_holds = [f.rstrip('.xlsx') for f in os.listdir(const.COMP_STOCK_HOLD_DIR)]
+comp_holds = [u'全部', u'嘉实', u'南方', u'广发', u'招商', u'鹏华', u'富国', u'华安', u'华夏', u'易方达',
+              u'博时', u'银华', u'国泰', u'工银瑞信', u'建信', u'华宝', u'大成', u'汇添富', u'国投瑞银',
+              u'长盛', u'长信', u'前海开源', u'天弘', u'中欧', u'诺安', u'中银', u'新华', u'申万菱信',
+              u'景顺长城', u'中融', u'中信保诚', u'华商', u'华泰柏瑞', u'融通', u'银河', u'东方',
+              u'交银施罗德', u'金鹰', u'泰达宏利', u'东吴', u'平安大华', u'长城', u'中邮创业', u'国联安',
+              u'上投摩根', u'光大保德信', u'农银汇理', u'万家', u'安信', u'中海', u'华富', u'西部利得',
+              u'民生加银', u'国寿安保', u'汇丰晋信', u'泰信', u'海富通', u'摩根士丹利华鑫', u'宝盈', 
+              u'浦银安盛', u'九泰', u'国海富兰克林', u'中金', u'兴业', u'财通', u'兴全', '信达澳银', u'诺德']
 
 invest_type_selections = [u'股票型基金', u'债券型基金', u'混合型基金']
 bond_type_selections = [u'全部',
@@ -63,6 +72,7 @@ source_comp_position = ColumnDataSource(data=dict(date=[], pos=[]))
 source_comp_table = ColumnDataSource(data=dict())
 source_stock_holding_table = ColumnDataSource(data=dict())
 source_stock_holding = ColumnDataSource(data=dict(date=[], hold=[]))
+source_comp_stock_hold_table = ColumnDataSource(data=dict())
 
 def scale_filter(df):
     if scale_select.value == u'全部':
@@ -247,15 +257,24 @@ def update_comp():
     source_comp_nav.data = {'date': acc_ret.index, 'nav': acc_ret.values}
     source_comp_position.data = {'date': pos.index, 'pos': pos.values}
 
+def update_comp_hold():
+    print('update comp hold')
+    comp_name = comp_stock_hold_select.value
+    fname = u'%s/%s.xlsx'%(const.COMP_STOCK_HOLD_DIR, comp_name)
+    df = pd.read_excel(fname, converters={'SecuCode': str})
+    df['ReportDate'] = df['ReportDate'].apply(lambda x: x.strftime('%Y-%m-%d'))
+    source_comp_stock_hold_table.data = source_comp_stock_hold_table.from_df(df)
+
 invtype1_select = Select(value=invest_type_selections[0], title=u'基金一级投资分类', width=200, options=invest_type_selections)
 invtype1_select.on_change('value', lambda attr, old, new: update_inputs())
 invtype2_select = Select(value=bond_type_selections[0], title=u'基金二级投资分类', width=200, options=bond_type_selections)
 scale_select = Select(value=scale_selections[0], title=u'基金资产净值', width=200, options=scale_selections)
 time_select = Select(value=u'1年', title=u'业绩时间窗口', width=200, options=time_selections)
 time_select.on_change('value', lambda attr, old, new: update_data())
+comp_stock_hold_select = Select(value=u'全部', title=u'公募基金重仓持股', width=200, options=comp_holds)
+comp_stock_hold_select.on_change('value', lambda attr, old, new: update_comp_hold())
 # today = datetime.datetime.today()
 # time_start = TextInput(label=(today - datetime.timedelta(365)).strftime('%Y-%m-%d'), title=u'开始日期', width=200)
-# time_start.on_change('value', lambda attr, old, new: update_data())
 # time_end = TextInput(label=today.strftime('%Y-%m-%d'), title=u'结束日期', width=200)
 # time_end.on_change('value', lambda attr, old, new: update_data())
 fund_button = Button(label=u"筛选基金", button_type="success", width=200)
@@ -291,15 +310,28 @@ stock_holding_columns = [
     TableColumn(field='ReportDate', title=u'日期'),
     TableColumn(field='FundCode', title=u'基金代码'),
     TableColumn(field='FundAbbr', title=u'基金名称'),
+    # TableColumn(field='SecuCode', title=u'股票代码'),
+    TableColumn(field='SecuAbbr', title=u'股票名称'),
+    TableColumn(field='SharesHolding', title=u'当前持仓股数', formatter=NumberFormatter(format='0,0')),
+    TableColumn(field='SDiff', title=u'持仓股数变动', formatter=NumberFormatter(format='0,0')),
+    TableColumn(field='MarketValue', title=u'当前持仓市值', formatter=NumberFormatter(format='$0,0')),
+    TableColumn(field='Diff', title=u'持仓市值变动', formatter=NumberFormatter(format='$0,0')),
+]
+stock_holding_table = DataTable(source=source_stock_holding_table, columns=stock_holding_columns, width=1200)
+comp_stock_columns = [
+    TableColumn(field='ReportDate', title=u'日期'),
     TableColumn(field='SecuCode', title=u'股票代码'),
     TableColumn(field='SecuAbbr', title=u'股票名称'),
-    TableColumn(field='SharesHolding', title=u'当前持仓股数'),
-    TableColumn(field='Diff', title=u'持仓变动'),
+    TableColumn(field='industry', title=u'股票行业分类'),
+    TableColumn(field='SharesHolding', title=u'当前持仓股数', formatter=NumberFormatter(format='0,0')),
+    TableColumn(field='SDiff', title=u'持仓股数变动', formatter=NumberFormatter(format='0,0')),
+    TableColumn(field='MarketValue', title=u'当前持仓市值', formatter=NumberFormatter(format='$0,0')),
+    TableColumn(field='Diff', title=u'持仓市值变动', formatter=NumberFormatter(format='$0,0')),
 ]
-stock_holding_table = DataTable(source=source_stock_holding_table, columns=stock_holding_columns, width=900)
+comp_stock_data_table = DataTable(source=source_comp_stock_hold_table, columns=comp_stock_columns, width=1200)
 
 tools = "pan,wheel_zoom,box_select,reset"
-plot_nav = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_nav = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_nav.line('date', 'nav', source=source_nav, line_width=3, line_alpha=0.6)
 plot_nav.title.text_font_size = "15pt"
 plot_nav.yaxis.minor_tick_line_color = None
@@ -312,7 +344,7 @@ plot_nav.title.text_font = "Microsoft YaHei"
 # plot_return.yaxis.minor_tick_line_color = None
 # plot_return.title.text_font = "Microsoft YaHei"
 
-stock_text = TextInput(value='600519', title=u'股票代码查询', width=200)
+stock_text = TextInput(value='600519', title=u'公募基金持仓股票代码查询', width=200)
 stock_text.on_change('value', lambda attr, old, new: update_stock_holding())
 fund1_text = TextInput(value='070099.OF', title=u'基金1Wind代码', width=200)
 fund2_text = TextInput(value='070013.OF', title=u'基金2Wind代码', width=200)
@@ -322,7 +354,7 @@ corr_col = column(fund1_text, fund2_text, corr_button)
 comp_start_time_text = TextInput(value='2017-07-01', title=u'开始时间', width=200)
 comp_start_time_text.on_change('value', lambda attr, old, new: update_comp_table())
 
-plot_correlation = figure(plot_height=400, plot_width=1000, tools=tools)
+plot_correlation = figure(plot_height=500, plot_width=1200, tools=tools)
 plot_correlation.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_correlation.title.text_font_size = "15pt"
 plot_correlation.yaxis.minor_tick_line_color = None
@@ -334,19 +366,19 @@ plot_correlation.line('days', 'median', source=source_cor, line_width=2, color='
 plot_correlation.line('days', 'percent_25', source=source_cor, line_width=2, color='#33FFCC', legend='1/4')
 plot_correlation.line('days', 'min', source=source_cor, line_width=2, color='#33FF66', legend='Min')
 
-plot_comp_nav = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_comp_nav = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_comp_nav.line('date', 'nav', source=source_comp_nav, line_width=3, line_alpha=0.6)
 plot_comp_nav.title.text_font_size = "15pt"
 plot_comp_nav.yaxis.minor_tick_line_color = None
 plot_comp_nav.title.text_font = "Microsoft YaHei"
 
-plot_comp_pos = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_comp_pos = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_comp_pos.line('date', 'pos', source=source_comp_position, line_width=3, line_alpha=0.6)
 plot_comp_pos.yaxis.minor_tick_line_color = None
 plot_comp_pos.title.text_font_size = '15pt'
 plot_comp_pos.title.text_font = 'Microsoft Yahei'
 
-plot_stock_holding = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_stock_holding = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_stock_holding.line('date', 'hold', source=source_stock_holding, line_width=3, line_alpha=0.6)
 plot_stock_holding.yaxis.minor_tick_line_color = None
 plot_stock_holding.title.text_font_size = '15pt'
@@ -362,8 +394,9 @@ update_comp()
 update_comp_table()
 select_fund()
 update_stock_holding()
+update_comp_hold()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, stock_text, stock_holding_table, plot_stock_holding, 
-                         corr_col, plot_correlation,
+curdoc().add_root(column(row(inputs, table), plot_nav, comp_stock_hold_select, comp_stock_data_table, stock_text, stock_holding_table,
+                         plot_stock_holding, corr_col, plot_correlation,
                          widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
 curdoc().title = u'基金筛选'

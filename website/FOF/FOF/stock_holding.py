@@ -6,14 +6,14 @@ import const
 import database
 
 def holding_qeury(stock):
-    query = 'SELECT t.SecuCode, t.SecuAbbr, s.SecuCode, s.SecuAbbr, fund.ReportDate, fund.SharesHolding \
+    query = 'SELECT t.SecuCode, t.SecuAbbr, s.SecuCode, s.SecuAbbr, fund.ReportDate, fund.SharesHolding, fund.MarketValue \
             FROM MF_KeyStockPortfolio as fund, SecuMain as t, SecuMain as s \
             WHERE s.SecuCode = \'%s\' \
                 AND fund.InnerCode = t.InnerCode \
                 AND fund.StockInnerCode = s.InnerCode \
                 ORDER BY fund.ReportDate DESC, fund.SharesHolding DESC'%(stock)
     df = database.DataFrame_JY(query)
-    df.columns = ['FundCode', 'FundAbbr', 'SecuCode', 'SecuAbbr', 'ReportDate', 'SharesHolding']
+    df.columns = ['FundCode', 'FundAbbr', 'SecuCode', 'SecuAbbr', 'ReportDate', 'SharesHolding', 'MarketValue']
     return df
 
 def quarter_sum_holding(stock):
@@ -36,13 +36,16 @@ def quarter_stock_holding(stock):
         codes = prev_date_funds.loc[~prev_date_funds.isin(next_date_funds)].values
         add_df = df[df['FundCode'].isin(codes)].copy()
         add_df = add_df[add_df['ReportDate'] == prev_date]
+        add_df['MarketValue'] = 0
         add_df['SharesHolding'] = 0
         add_df['ReportDate'] = next_date
         df = df.append(add_df)
     df = df.sort_values('ReportDate', ascending=False)
-    df['Diff'] = df['SharesHolding'] - df.groupby('FundCode')['SharesHolding'].shift(-1)
-    df['Diff'] = df['Diff'].fillna(df['SharesHolding'])
-    df = df.sort_values(['ReportDate', 'Diff'], ascending=False)
+    df['Diff'] = df['MarketValue'] - df.groupby('FundCode')['MarketValue'].shift(-1)
+    df['Diff'] = df['Diff'].fillna(df['MarketValue'])
+    df['SDiff'] = df['SharesHolding'] - df.groupby('FundCode')['SharesHolding'].shift(-1)
+    df['SDiff'] = df['SDiff'].fillna(df['SharesHolding'])
+    df = df.sort_values(['ReportDate', 'SDiff'], ascending=False)
     df = df.set_index('ReportDate')
     return df
 

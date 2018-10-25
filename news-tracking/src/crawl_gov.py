@@ -33,7 +33,9 @@ def crawl_content(url):
     content = soup.find(class_='pages_content')
     if content == None:
         return
-    content = content.text
+    # content = content.text
+    content = content.findAll('p')
+    content = ''.join([x.getText() for x in content])
     dir_name = '%s/%s'%(const.GOV_DIR, source)
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)

@@ -163,4 +163,4 @@ def min_liquidity():
 if __name__ == '__main__':
     cal_market_liquidity()
     cal_market_liquidity_proxy()
-    min_liquidity()
+    # min_liquidity()

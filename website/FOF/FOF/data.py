@@ -15,7 +15,6 @@ import mixed_fund
 def download_index_close(wind_code, start_date, end_date):
     w.start()
     data = w.wsd(wind_code, 'close', start_date, end_date)
-    # print data
     return utils.wind2df(data)
 
 def update_fund_list(df, fname):
@@ -250,7 +249,7 @@ def update_index_data(wind_code):
         end_date = datetime.datetime.today().strftime("%Y-%m-%d")
     if os.path.exists(fname):
         df = pd.read_excel(fname, index_col=0)
-        df = df[df.index < '2018-03-05']
+        df = df[df.index < '2018-07-16']
         if 'outmessage' in df.columns:
             del df['outmessage']
             # df = df[df.index < '2017-10-30']

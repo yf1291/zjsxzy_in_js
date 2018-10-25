@@ -212,7 +212,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20180716', u'精选FOF2号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20181022', u'稳进6号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']
@@ -229,7 +229,7 @@ if __name__ == '__main__':
     fund2_df['type'] = data.Data[0]
 
     print(u'指数数据')
-    index_data(index_df)
+    # index_data(index_df)
     print(u'投资情况')
     investment_analysis(inv1_df, inv2_df, fund1_df, fund2_df)
     print(u'期末状况')
