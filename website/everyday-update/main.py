@@ -7,7 +7,7 @@ import sys
 
 from bokeh.io import curdoc
 from bokeh.layouts import row, column, widgetbox
-from bokeh.models import ColumnDataSource, NumeralTickFormatter
+from bokeh.models import ColumnDataSource, NumeralTickFormatter, Range1d, LinearAxis
 from bokeh.models.widgets import Slider, TextInput, TableColumn, DataTable, Select, Button, NumberFormatter
 from bokeh.plotting import figure
 from bokeh.palettes import Spectral9
@@ -45,7 +45,9 @@ DEPARTMENT_NAME = {'881001.WI': u'万得全A',
                    '399005.SZ': u'中小板',
                    '399006.SZ': u'创业板',
                    '399550.SZ': u'央视50',
-                   'HSCAIT.HI': u'恒生A股龙头'}
+                   'HSCAIT.HI': u'恒生A股龙头',
+                   '000903.SH': u'中证100',
+                   '399673.SZ': u'创业板50'}
 DEPARTMENT_ENG_NAME = {'881001.WI': u'wdqa',
                        '000016.SH': u'sz50',
                        '000300.SH': u'hs300',
@@ -102,6 +104,7 @@ source_min_liquidity = ColumnDataSource(data=dict(date=[], liquidity=[]))
 source_wei_table = ColumnDataSource(data=dict())
 source_wei_index = ColumnDataSource(data=dict(date=[], val=[]))
 source_record_high_table = ColumnDataSource(data=dict())
+source_right_price = ColumnDataSource(data=dict(date=[], p=[]))
 
 def update_title():
     plot_price.title.text = asset_select.value
@@ -325,6 +328,9 @@ def update_cost(industry=False):
                                       "prof_text": [u"当前值: %.2f%%"%(last_prof_value*100), u"历史滚动均值: %.2f%%"%(mean_prof_value*100),
                                                     u"偏离均值%.2f个标准差"%(prof_dev_value)]}
 
+    df = utils.get_index_price(index_code, market_df.index[0], market_df.index[-1])
+    source_right_price.data = source_price.from_df(df)
+
 def update_liquidity():
     # print("update liquidity")
     # fname = '%s/liquidity.xlsx'%(const.DATA_DIR)
@@ -380,9 +386,10 @@ def update_volume_table():
     source_volume_table.data = {
         'sec_name': df['sec_name'],
         'wind_code': df['wind_code'],
-        'volume': df['volume'],
+        'amt': df['amt'],
         'turnover': df['turnover']/100,
         'industry': df['industry'],
+        'pct': df['pct_chg']/100,
     }
 
 def update_wei_index_table():
@@ -451,9 +458,9 @@ def update_all():
     update_volume_table()
     update_eyby()
     update_industry_corr()
-    update_min_liquidity()
-    update_wei_index_table()
-    update_wei_index()
+    # update_min_liquidity()
+    # update_wei_index_table()
+    # update_wei_index()
     update_record_high_table()
 
 asset_select = Select(value=u"万得全A指数", title="资产", width=300, options=asset_selections)
@@ -479,10 +486,11 @@ volume_columns = [
     TableColumn(field='wind_code', title=u'证券代码'),
     TableColumn(field='sec_name', title=u'证券简称'),
     TableColumn(field='industry', title=u'证券行业'),
-    TableColumn(field='volume', title=u'成交量', formatter=NumberFormatter(format='$0,0.00')),
+    TableColumn(field='amt', title=u'成交额', formatter=NumberFormatter(format='$0,0.00')),
     TableColumn(field='turnover', title=u'换手率', formatter=NumberFormatter(format='0.00%')),
+    TableColumn(field='pct', title=u'涨跌幅', formatter=NumberFormatter(format='0.00%')),
 ]
-volume_data_table = DataTable(source=source_volume_table, columns=volume_columns, width=1000)
+volume_data_table = DataTable(source=source_volume_table, columns=volume_columns, width=1200)
 # volume_data_table.title.text_font_size = 'Microsoft YaHei'
 # volume_data_table.title = u'成交量Top50股票列表'
 wei_columns = [
@@ -490,7 +498,7 @@ wei_columns = [
     TableColumn(field='name', title=u'名称'),
     TableColumn(field='percent', title=u'微指数当前百分位', formatter=NumberFormatter(format='0.00%')),
 ]
-wei_data_table = DataTable(source=source_wei_table, columns=wei_columns, width=1000)
+wei_data_table = DataTable(source=source_wei_table, columns=wei_columns, width=1200)
 wei_stock_text = TextInput(value='600519', title=u'股票代码', width=300)
 wei_stock_text.on_change('value', lambda attr, old, new: update_wei_index())
 record_high_columns = [
@@ -502,15 +510,15 @@ record_high_columns = [
     TableColumn(field='half', title=u'半年内创新高次数'),
     TableColumn(field='year', title=u'一年内创新高次数'),
 ]
-record_high_data_table = DataTable(source=source_record_high_table, columns=record_high_columns, width=1000)
+record_high_data_table = DataTable(source=source_record_high_table, columns=record_high_columns, width=1200)
 
 tools = "pan,wheel_zoom,box_select,reset"
-plot_price = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_price = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_price.title.text_font_size = "15pt"
 plot_price.yaxis.minor_tick_line_color = None
 plot_price.title.text_font = "Microsoft YaHei"
 
-plot_mom = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_mom = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_mom.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_mom.title.text_font_size = "15pt"
 plot_mom.yaxis.minor_tick_line_color = None
@@ -520,7 +528,7 @@ plot_mom.line('date', 'mom60', source=source_mom, line_width=2, color='yellow', 
 plot_mom.line('date', 'mom121', source=source_mom, line_width=2, color='green', legend=u'半年动量')
 plot_mom.line('date', 'mom242', source=source_mom, line_width=2, color='blue', legend=u'一年动量')
 
-plot_vol = figure(plot_height=400, plot_width=1000, tools=tools)
+plot_vol = figure(plot_height=500, plot_width=1200, tools=tools)
 plot_vol.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_vol.title.text_font_size = "15pt"
 plot_vol.yaxis.minor_tick_line_color = None
@@ -531,7 +539,7 @@ plot_vol.line('days', 'median', source=source_vol, line_width=2, color='#33CCFF'
 plot_vol.line('days', 'percent_25', source=source_vol, line_width=2, color='#33FFCC', legend='1/4')
 plot_vol.line('days', 'min', source=source_vol, line_width=2, color='#33FF66', legend='Min')
 
-plot_sharpe = figure(plot_height=400, plot_width=1000, tools=tools, x_range=[-0.5, len(asset_selections)+0.5], y_range=[-6, 10], title="资产夏普率")
+plot_sharpe = figure(plot_height=500, plot_width=1200, tools=tools, x_range=[-0.5, len(asset_selections)+0.5], y_range=[-6, 10], title="资产夏普率")
 plot_sharpe.quad(left='left', right='right', bottom='bottom', top='top', source=source_sharpe, color='color')
 plot_sharpe.text(x='left', y=-5, text='text', source=source_sharpe, text_font_size='9pt', angle=0.5)
 plot_sharpe.text(x='text_pos', y='top', text='sharpe', source=source_sharpe, text_font_size='10pt')
@@ -540,7 +548,7 @@ plot_sharpe.yaxis.axis_label = u"Sharpe Ratio"
 plot_sharpe.title.text_font_size = "15pt"
 plot_sharpe.yaxis.minor_tick_line_color = None
 
-plot_momentum = figure(plot_height=400, plot_width=1000, tools=tools, x_range=[-0.5, len(asset_selections)], y_range=[-0.005, 0.005], title=u'资产动量')
+plot_momentum = figure(plot_height=500, plot_width=1200, tools=tools, x_range=[-0.5, len(asset_selections)], y_range=[-0.005, 0.005], title=u'资产动量')
 plot_momentum.quad(left='left', right='right', bottom='bottom', top='top', source=source_momentum, color='color')
 plot_momentum.text(x='left', y=-0.003, text='text', source=source_momentum, text_font_size='9pt', angle=0.5)
 plot_momentum.text(x='text_pos', y='top', text='momentum', source=source_momentum, text_font_size='7pt')
@@ -549,7 +557,7 @@ plot_momentum.title.text_font_size = '15pt'
 plot_momentum.yaxis.minor_tick_line_color = None
 plot_momentum.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 
-plot_correlation = figure(plot_height=400, plot_width=1000, tools=tools)
+plot_correlation = figure(plot_height=500, plot_width=1200, tools=tools)
 plot_correlation.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_correlation.title.text_font_size = "15pt"
 plot_correlation.yaxis.minor_tick_line_color = None
@@ -561,7 +569,7 @@ plot_correlation.line('days', 'median', source=source_cor, line_width=2, color='
 plot_correlation.line('days', 'percent_25', source=source_cor, line_width=2, color='#33FFCC', legend='1/4')
 plot_correlation.line('days', 'min', source=source_cor, line_width=2, color='#33FF66', legend='Min')
 
-plot_consistency = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_consistency = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_consistency.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_consistency.title.text = u'市场方向一致度'
 plot_consistency.title.text_font_size = "15pt"
@@ -569,41 +577,49 @@ plot_consistency.yaxis.minor_tick_line_color = None
 plot_consistency.title.text_font = "Microsoft YaHei"
 plot_consistency.line('date', 'con60', source=source_consistency, line_width=3)
 
-plot_cost = figure(plot_height=400, plot_width=1000, tools=tools, title=u"万得全A持有成本盈亏", x_axis_type="datetime")
+plot_cost = figure(plot_height=500, plot_width=1200, tools=tools, title=u"万得全A持有成本盈亏", x_axis_type="datetime")
 plot_cost.text(x='text_x', y='text_y', text='text', source=source_turnover_cost_text, text_font_size='9pt')
 plot_cost.line('date', 'cost', source=source_turnover_cost, line_width=3, legend=u"当前盈亏")
 plot_cost.line('date', 'rolling_mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏季度均值")
-plot_cost.line('date', 'zero', source=source_turnover_cost, line_width=2, color='red', legend=u"零")
+plot_cost.line('date', 'zero', source=source_turnover_cost, line_width=2, color=COLORS[5], legend=u"零")
 plot_cost.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_cost.yaxis.axis_label = u"percentage"
 plot_cost.title.text_font_size = "15pt"
 plot_cost.yaxis.minor_tick_line_color = None
+plot_cost.y_range = Range1d(-0.3, 0.15)
+plot_cost.extra_y_ranges = {'close': Range1d(0, 7000)}
+plot_cost.add_layout(LinearAxis(y_range_name='close'), 'right')
+plot_cost.line('date', 'p', source=source_right_price, y_range_name='close', line_width=2, color='#d53e4f', legend=u'指数')
 
-plot_profit = figure(plot_height=400, plot_width=1000, tools=tools, title=u"万得全A持仓盈亏百分比", x_axis_type="datetime")
+plot_profit = figure(plot_height=500, plot_width=1200, tools=tools, title=u"万得全A持仓盈亏百分比", x_axis_type="datetime")
 plot_profit.text(x='text_x', y='prof_text_y', text='prof_text', source=source_turnover_cost_text, text_font_size='9pt')
 plot_profit.line('date', 'profit', source=source_turnover_cost, line_width=3, legend=u"当前盈亏百分比")
 plot_profit.line('date', 'rolling_profit_mean', source=source_turnover_cost, line_width=2, color='#33FF66', legend=u"盈亏百分比季度均值")
-plot_profit.line('date', 'prof_50', source=source_turnover_cost, line_width=2, color='red', legend=u"50%")
+plot_profit.line('date', 'prof_50', source=source_turnover_cost, line_width=2, color=COLORS[5], legend=u"50%")
 plot_profit.yaxis.formatter = NumeralTickFormatter(format="0.00%")
 plot_profit.yaxis.axis_label = u"percentage"
 plot_profit.title.text_font_size = "15pt"
 plot_profit.yaxis.minor_tick_line_color = None
+plot_profit.y_range = Range1d(0, 1)
+plot_profit.extra_y_ranges = {'close': Range1d(0, 7000)}
+plot_profit.add_layout(LinearAxis(y_range_name='close'), 'right')
+plot_profit.line('date', 'p', source=source_right_price, y_range_name='close', line_width=2, color='#d53e4f', legend=u'指数')
 
-plot_liquidity = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_liquidity = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_liquidity.title.text_font_size = "15pt"
 plot_liquidity.yaxis.minor_tick_line_color = None
 plot_liquidity.title.text_font = "Microsoft YaHei"
 plot_liquidity.title.text = u'881001.WI 流动性指标（自相关系数）：自相关系数越低，流动性越好'
 plot_liquidity.line('date', 'liquidity', source=source_liquidity, line_width=2)
 
-plot_liquidity_risk = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_liquidity_risk = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_liquidity_risk.yaxis.minor_tick_line_color = None
 plot_liquidity_risk.title.text_font_size = '15pt'
 plot_liquidity_risk.title.text_font = 'Microsoft Yahei'
 plot_liquidity_risk.title.text = u'股票流动性风险'
 plot_liquidity_risk.vbar(x='date', top='risk', bottom=0, width=1, source=source_liquidity_risk)
 
-plot_min_liquidity = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_min_liquidity = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_min_liquidity.yaxis.minor_tick_line_color = None
 plot_min_liquidity.title.text_font_size = '15pt'
 plot_min_liquidity.title.text_font = 'Microsoft Yahei'
@@ -612,7 +628,7 @@ plot_min_liquidity.vbar(x='date', top='liquidity', bottom=0, width=1, source=sou
 
 
 '''
-plot_mean_line = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_mean_line = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_mean_line.title.text_font_size = '15pt'
 plot_mean_line.title.text_font = 'Microsoft YaHei'
 plot_mean_line.title.text = u'站上均线的股票占比'
@@ -623,7 +639,7 @@ plot_mean_line.line('date', 'quarter', source=source_mean_line, line_width=3, co
 plot_mean_line.line('date', 'year', source=source_mean_line, line_width=3, color='#33FF66', legend=u'年线')
 '''
 
-plot_turnover_days = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_turnover_days = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_turnover_days.title.text_font_size = '15pt'
 plot_turnover_days.title.text_font = 'Microsoft YaHei'
 plot_turnover_days.title.text = u'万得全A平均换手天数'
@@ -633,14 +649,14 @@ plot_turnover_days.line('date', 'tdays', source=source_turnover_days, line_width
 plot_turnover_days.line('date', 'tdays5', source=source_turnover_days, line_width=1, color='green', legend=u'5天均值')
 plot_turnover_days.line('date', 'tdays10', source=source_turnover_days, line_width=1, color='red', legend=u'10天均值')
 
-plot_concentration = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_concentration = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_concentration.yaxis.minor_tick_line_color = None
 plot_concentration.title.text_font_size = '15pt'
 plot_concentration.title.text_font = 'Microsoft Yahei'
 plot_concentration.title.text = u'股票收益率集中性'
 plot_concentration.vbar(x='date', top='concentration', bottom=0, width=1, source=source_concentration)
 
-plot_eyby = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_eyby = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_eyby.title.text_font_size = "15pt"
 plot_eyby.yaxis.minor_tick_line_color = None
 plot_eyby.title.text_font = "Microsoft YaHei"
@@ -648,7 +664,7 @@ plot_eyby.title.text = u'股债相对收益率'
 plot_eyby.line('date', 'spread', source=source_eyby, line_width=2, color='red', legend=u'股债相对收益率')
 plot_eyby.line('date', 'close', source=source_eyby, line_width=2, legend=u'万得全A')
 
-plot_industry_corr = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_industry_corr = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_industry_corr.yaxis.formatter = NumeralTickFormatter(format="0.00")
 plot_industry_corr.title.text = u'行业指数相关性'
 plot_industry_corr.title.text_font_size = "15pt"
@@ -657,7 +673,7 @@ plot_industry_corr.title.text_font = "Microsoft YaHei"
 plot_industry_corr.line('date', 'corr', source=source_industry_corr, line_width=3, legend=u'均值')
 plot_industry_corr.line('date', 'median', source=source_industry_corr, line_width=3, color='red', legend=u'中位数')
 
-plot_wei_index = figure(plot_height=400, plot_width=1000, tools=tools, x_axis_type='datetime')
+plot_wei_index = figure(plot_height=500, plot_width=1200, tools=tools, x_axis_type='datetime')
 plot_wei_index.title.text = u'贵州茅台'
 plot_wei_index.title.text_font_size = '15pt'
 plot_wei_index.yaxis.minor_tick_line_color = None
@@ -665,7 +681,7 @@ plot_wei_index.title.text_font = 'Microsoft Yahei'
 plot_wei_index.vbar(x='date', top='val', bottom=0, width=1, source=source_wei_index)
 # plot_wei_index.line('date', 'val', source=source_wei_index, line_width=3, legend=plot_wei_index.title.text)
 
-plot_blank = figure(plot_height=200, plot_width=1000, tools=[])
+plot_blank = figure(plot_height=200, plot_width=1200, tools=[])
 
 update_all()
 update_momentum_statistics()
@@ -683,8 +699,7 @@ inputs = widgetbox(time_text, time_end_text, asset_select)
 curdoc().add_root(column(inputs, plot_momentum, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
                          plot_eyby, plot_consistency, plot_industry_corr,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
-                         liquidity_asset, plot_liquidity, plot_min_liquidity, liquidity_row, plot_liquidity_risk,
-                         plot_concentration, volume_data_table, wei_data_table, wei_stock_text, plot_wei_index,
-                         record_high_data_table, plot_blank))
+                         liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
+                         plot_concentration, volume_data_table, record_high_data_table, plot_blank))
 # curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"

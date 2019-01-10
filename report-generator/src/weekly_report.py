@@ -111,8 +111,8 @@ def investment_analysis(inv1_df, inv2_df, fund1_df, fund2_df):
     inv2_df.index = inv2_df.index.map(lambda x: x.strip())
 
     content = []
-    hk1, astock1, gold1, oil1, money1, oversea_stock1, bond1 = fund_position(fund1_df)
-    hk2, astock2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
+    astock1, hk1, gold1, oil1, money1, oversea_stock1, bond1 = fund_position(fund1_df)
+    astock2, hk2, gold2, oil2, money2, oversea_stock2, bond2 = fund_position(fund2_df)
     line = money_management(inv1_df, inv2_df)
     num = (money2 - money1) * 100
     if abs(num) > 0.001:
@@ -212,7 +212,7 @@ def current_position(inv2_df, fund2_df, hold_df):
         f.write('\n'.join(content).encode('utf-8'))
 
 if __name__ == '__main__':
-    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20181022', u'稳进6号.xlsx')
+    excel_fname = u'%s/%s/%s'%(const.WEEK_DATA_DIR, '20190107', u'稳进6号.xlsx')
     all_df = get_all_dataframe(excel_fname)
     index_df = all_df[u'指数']
     inv1_df = all_df[u'日报1']

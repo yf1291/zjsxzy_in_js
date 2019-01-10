@@ -33,6 +33,7 @@ def return_intersect(start_date, end_date):
     ret = df.pct_change()
     ret = ret[(ret.index >= start_date) & (ret.index <= end_date)]
     ret = (1 + ret).cumprod().iloc[-1] - 1.
+    # print ret.tail()
 
     df = pd.read_excel(const.SW_SECTOR_FILE, index_col=0)
     df.columns = ['sector']

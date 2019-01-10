@@ -80,3 +80,13 @@ def get_stock_history_price_from_wind():
     df['TRADE_DT'] = pd.to_datetime(df['TRADE_DT'], format='%Y%m%d')
     df = df.pivot_table('S_DQ_ADJCLOSE', index=['TRADE_DT', 'S_INFO_WINDCODE']).unstack()
     return df
+
+def get_index_price(index_code, start_date, end_date):
+    '''
+    得到指数的历史价格，返回DataFrame格式
+    '''
+    data = w.wsd(index_code, 'close', start_date, end_date)
+    df = pd.DataFrame(np.array(data.Data[0]), index=data.Times, columns=['p'])
+    df.index = pd.to_datetime(df.index)
+    df['date'] = df.index
+    return df

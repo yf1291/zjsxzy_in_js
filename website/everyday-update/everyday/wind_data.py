@@ -80,9 +80,8 @@ def get_component(symbols,
                   date=datetime.datetime.today().strftime("%Y-%m-%d")):
     w.start()
     data = w.wset("sectorconstituent","date=%s;windcode=%s"%(date, symbols))
-    df = wind2df(data)
+    df = pd.DataFrame(np.array(data.Data).T, columns=data.Fields)
     df = df[["sec_name", "wind_code"]]
-    df.columns = ["name", "code"]
     df.to_excel("%s/%s.xlsx"%(const.INDEX_DIR, symbols), index=False)
 
 def column_append(ticker,
@@ -134,7 +133,10 @@ def get_stock_price_panel():
     vdf.to_excel('%s/volume_top50.xlsx'%(const.DATA_DIR))
 
 def main():
-    get_stock_price_panel()
+    # get_stock_price_panel()
+    index = ['000016.SH', '000300.SH', '000905.SH', '000906.SH', '399005.SZ', '399006.SZ', '881001.WI', 'HSCAIT.HI', '000903.SH', '399673.SZ']
+    for i in index:
+        get_component(i)
     # get_stock_information()
     download_all(ASSETS_NAME.keys())
 

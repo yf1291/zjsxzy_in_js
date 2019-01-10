@@ -20,9 +20,9 @@ def main():
     data = w.wss(df.index.tolist(), 'industry_citic', 
                 'tradeDate=%s;industryType=4'%(date.strftime('%Y%m%d')))
     df['industry'] = data.Data[0]
-    data = w.wss(df.index.tolist(), "free_turn,volume,amt", "tradeDate=%s;cycle=D"%(date.strftime('%Y%m%d')))
-    df['turnover'], df['volume'], df['amt'] = data.Data
-    df = df.sort_values('volume', ascending=False)
+    data = w.wss(df.index.tolist(), "free_turn,volume,amt,pct_chg", "tradeDate=%s;cycle=D"%(date.strftime('%Y%m%d')))
+    df['turnover'], df['volume'], df['amt'], df['pct_chg'] = data.Data
+    df = df.sort_values('amt', ascending=False)
     df.to_excel(fname)
 
 if __name__ == '__main__':
