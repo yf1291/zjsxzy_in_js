@@ -8,9 +8,9 @@ from WindPy import w
 import const
 import utils
 
-def record_high(year=5, recents=[20, 60, 121, 243]):
+def record_high(year=2, recents=[20, 60, 121, 243]):
     '''
-    计算recents范围内当前所有股票创新的次数
+    计算recents范围内当前所有股票创新高的次数
     '''
     df = utils.get_stock_history_price_from_wind()
     max_df = df.rolling(243*year, min_periods=1).max()
