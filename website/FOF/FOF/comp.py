@@ -45,12 +45,13 @@ def save_comp_rpt():
         pnl = pd.Panel(dic)
         pnl.to_pickle('%s/%s.pkl'%(const.COMP_RPT_DIR, c))
 
-def get_comp_daily_return(comp_name):
+def get_comp_daily_return(comp_name, wind_codes):
     '''
     得到基金公司日收益率曲线
     '''
     fname = '%s/%s.xlsx'%(const.COMP_DIR, comp_name)
     df = pd.read_excel(fname, encoding='utf-8')
+    df = df[wind_codes]
     df = df.pct_change()
     fname = '%s/%s.pkl'%(const.COMP_RPT_DIR, comp_name)
     pnl = pd.read_pickle(fname)
@@ -58,7 +59,7 @@ def get_comp_daily_return(comp_name):
         return None
     st2nav = pnl.minor_xs('prt_stocktonav')
     weight_df = pnl.minor_xs('prt_netasset')
-    weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
+    # weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
     weight_df = weight_df.fillna(0)
     weight_zero_df = pd.DataFrame(index=df.index, columns=df.columns)
     weight_df = weight_zero_df.append(weight_df).sort_index()
@@ -71,7 +72,7 @@ def get_comp_daily_return(comp_name):
     sum_weight = weight_df.sum(axis=1)
     select_index = sum_weight[sum_weight > 0].index
     weight_df = weight_df.loc[select_index]
-    weight_df.to_excel('D:/Data/temp.xlsx')
+    # weight_df.to_excel('D:/Data/temp.xlsx')
     # print weight_df.shape
     # print weight_df.sum(axis=1)
     # print weight_df.div(weight_df.sum(axis=1), axis='index')
@@ -92,10 +93,14 @@ def get_all_comp_daily_return():
     dic = {}
     for c in comps:
         print c
-        daily_return = get_comp_daily_return(c)
+        df = all_df[all_df['mgrcomp'] == c]
+        df = df[df['investtype'].str.contains(u'股')]
+        daily_return = get_comp_daily_return(c, df['wind_code'].tolist())
+        break
         if daily_return is None:
             continue
         dic[c] = daily_return
+    return
     df = pd.DataFrame(dic)
     df.to_excel('%s/comp_ret.xlsx'%(const.FOF_DIR), encoding='utf-8')
 
