@@ -59,7 +59,8 @@ def get_comp_daily_return(comp_name, wind_codes):
         return None
     st2nav = pnl.minor_xs('prt_stocktonav')
     weight_df = pnl.minor_xs('prt_netasset')
-    # weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
+    weight_df = weight_df[df.columns]
+    weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
     weight_df = weight_df.fillna(0)
     weight_zero_df = pd.DataFrame(index=df.index, columns=df.columns)
     weight_df = weight_zero_df.append(weight_df).sort_index()
@@ -96,11 +97,10 @@ def get_all_comp_daily_return():
         df = all_df[all_df['mgrcomp'] == c]
         df = df[df['investtype'].str.contains(u'股')]
         daily_return = get_comp_daily_return(c, df['wind_code'].tolist())
-        break
         if daily_return is None:
             continue
         dic[c] = daily_return
-    return
+        print empyrical.cum_returns_final(daily_return[daily_return.index >= '2019-01-01'])
     df = pd.DataFrame(dic)
     df.to_excel('%s/comp_ret.xlsx'%(const.FOF_DIR), encoding='utf-8')
 

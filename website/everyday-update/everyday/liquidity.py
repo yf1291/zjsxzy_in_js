@@ -105,45 +105,16 @@ def cal_index_liquidity_proxy(index_code='881001'):
 def get_index_liquidity_proxy(pnl, index_code):
     print(index_code)
     codes = utils.get_index_component(index_code)
-    return pnl[codes].minor_xs('amihud').mean(axis=1), \
-           pnl[codes].minor_xs('wu').mean(axis=1), \
-           pnl[codes].minor_xs('CS').mean(axis=1).abs(), \
-           pnl[codes].minor_xs('roll').mean(axis=1)
+    return pnl[codes].minor_xs('amihud').median(axis=1), \
+           pnl[codes].minor_xs('wu').median(axis=1), \
+           pnl[codes].minor_xs('CS').median(axis=1).abs(), \
+           pnl[codes].minor_xs('roll').median(axis=1)
 
 def cal_market_liquidity_proxy():
-    pnl = cal_index_liquidity_proxy('881001.WI')
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '000016.SH')
-    df = pd.DataFrame({'sz50_amihud': amihud, 'sz50_wu': wu, 'sz50_corwin and schultz': cs, 'sz_roll': roll})
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '881001.WI')
-    df['wdqa_amihud'] = amihud
-    df['wdqa_wu'] = wu
-    df['wdqa_corwin and schultz'] = cs
-    df['wdqa_roll'] = roll
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '000300.SH')
-    df['hs300_amihud'] = amihud
-    df['hs300_wu'] = wu
-    df['hs300_corwin and schultz'] = cs
-    df['hs300_roll'] = roll
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '000905.SH')
-    df['zz500_amihud'] = amihud
-    df['zz500_wu'] = wu
-    df['zz500_corwin and schultz'] = cs
-    df['zz500_roll'] = roll
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '000906.SH')
-    df['zz800_amihud'] = amihud
-    df['zz800_wu'] = wu
-    df['zz800_corwin and schultz'] = cs
-    df['zz800_roll'] = roll
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '399006.SZ')
-    df['zxb_amihud'] = amihud
-    df['zxb_wu'] = wu
-    df['zxb_corwin and schultz'] = cs
-    df['zxb_roll'] = roll
-    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, '399005.SZ')
-    df['cyb_amihud'] = amihud
-    df['cyb_wu'] = wu
-    df['cyb_corwin and schultz'] = cs
-    df['cyb_roll'] = roll
+    code = '881001.WI'
+    pnl = cal_index_liquidity_proxy(code)
+    amihud, wu, cs, roll = get_index_liquidity_proxy(pnl, code)
+    df = pd.DataFrame({'amihud': amihud, 'wu': wu, 'corwin and schultz': cs, 'roll': roll})
     df.to_excel('%s/amihud_liquidity.xlsx'%(const.DATA_DIR))
 
 def min_liquidity():
@@ -161,6 +132,6 @@ def min_liquidity():
     df[['liquidity']].to_excel('%s/min_liquidity.xlsx'%(const.DATA_DIR))
 
 if __name__ == '__main__':
-    cal_market_liquidity()
+    # cal_market_liquidity()
     cal_market_liquidity_proxy()
     # min_liquidity()

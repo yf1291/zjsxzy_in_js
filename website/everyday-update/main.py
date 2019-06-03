@@ -451,8 +451,8 @@ def update_all():
     update_correlation()
     update_industry_consistency()
     update_cost()
-    update_liquidity()
-    update_liquidity_risk()
+    # update_liquidity()
+    # update_liquidity_risk()
     # update_mean_line()
     update_concentration()
     update_volume_table()
@@ -699,7 +699,7 @@ inputs = widgetbox(time_text, time_end_text, asset_select)
 curdoc().add_root(column(inputs, plot_momentum, plot_sharpe, plot_price, plot_mom, plot_vol, asset_row, plot_correlation,
                          plot_eyby, plot_consistency, plot_industry_corr,
                          department_industry_row, plot_cost, plot_profit, plot_turnover_days,
-                         liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
+                        #  liquidity_asset, plot_liquidity, liquidity_row, plot_liquidity_risk,
                          plot_concentration, volume_data_table, record_high_data_table, plot_blank))
 # curdoc().add_root(column(inputs, plot_sharpe, plot_price, plot_vol, asset_row, plot_correlation))
 curdoc().title = u"每日资产总结"
