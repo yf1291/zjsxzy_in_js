@@ -59,7 +59,8 @@ def get_comp_daily_return(comp_name, wind_codes):
         return None
     st2nav = pnl.minor_xs('prt_stocktonav')
     weight_df = pnl.minor_xs('prt_netasset')
-    weight_df = weight_df[df.columns]
+    columns = [x for x in df.columns if x in weight_df.columns]
+    weight_df = weight_df[columns]
     weight_df = weight_df[st2nav > 60] # 股票仓位大于60%
     weight_df = weight_df.fillna(0)
     weight_zero_df = pd.DataFrame(index=df.index, columns=df.columns)
