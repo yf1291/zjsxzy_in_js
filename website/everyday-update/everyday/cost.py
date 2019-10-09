@@ -57,7 +57,7 @@ def add_column(field):
 
 def get_wind_data(code, start_date, end_date):
     w.start()
-    fields = "mkt_freeshares,vwap,amt,close,dealnum,volume,mfd_buyamt_a,mfd_sellamt_a,high,low,pe_ttm"
+    fields = "amt,close,high,low,mkt_freeshares,pe_ttm,volume,vwap"
     data = w.wsd(code, fields, start_date, end_date, "traderType=1;PriceAdj=F")
     return utils.wind2df(data)
 
@@ -104,8 +104,13 @@ def update_all(index_code=None, start_date="2010-04-01",
     for code in codes:
         fname = '%s/%s.xlsx'%(const.STOCK_DIR, code)
         if os.path.exists(fname):
+            # print("updating %s..."%(code))
+            # df = pd.read_excel(fname)
+            # df = df[['amt', 'close', 'high', 'low', 'mkt_freeshares', 'pe_ttm', 'volume', 'vwap', 'turnover']]
+            # df = df.to_excel(fname)
             append_to_old_excel(code)
         else:
+            # continue
             print("downloding %s..."%(code))
             df = get_wind_data(code, start_date, end_date)
             df["turnover"] = df["amt"] / df["mkt_freeshares"] # 计算换手率
@@ -321,7 +326,6 @@ def delete_old_files():
 
 def main():
     update_all("881001.WI")
-    # add_row('2018-03-22')
     # delete_old_files()
     get_history_turnover()
     files = ['881001.WI', '399006.SZ', '399005.SZ',
