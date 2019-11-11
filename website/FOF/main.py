@@ -389,14 +389,12 @@ inputs = widgetbox(invtype1_select, invtype2_select, scale_select, time_select, 
 table = widgetbox(data_table)
 update_inputs()
 update_data()
-update_correlation()
-update_comp()
+# update_correlation()
+# update_comp()
 update_comp_table()
 select_fund()
 update_stock_holding()
 update_comp_hold()
 
-curdoc().add_root(column(row(inputs, table), plot_nav, comp_stock_hold_select, comp_stock_data_table, stock_text, stock_holding_table,
-                         plot_stock_holding, corr_col, plot_correlation,
-                         widgetbox(comp_start_time_text, comp_select), comp_data_table, plot_comp_nav, plot_comp_pos))
+curdoc().add_root(column(row(inputs, table), plot_nav, comp_stock_hold_select, comp_stock_data_table, stock_text, stock_holding_table))
 curdoc().title = u'基金筛选'
