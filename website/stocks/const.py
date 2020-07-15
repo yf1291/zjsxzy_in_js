@@ -1,0 +1,10 @@
+# DATA_DIR = '\\\\hfm-pubshare\HFM各部门共享\Harvest嘉实全体员工\策略孵化组\多重风管分组审核\zhangyang\股票池'
+DATA_DIR = '\\\\hg-pubshare\HFM各部门共享\资产配置投资研究中心\张炀\股票池'
+STOCKS_LIST_FILE = '%s/股票池.xlsx'%(DATA_DIR)
+INSIDE_OUTSIDE_STOCKS_FILE = '%s/细分行业龙头公司.xlsx'%(DATA_DIR)
+FUND_STOCKS_FILE = '%s/基金重仓股.xlsx'%(DATA_DIR)
+CONNECT_STOCKS_FILE = '%s/北向资金重仓股.xlsx'%(DATA_DIR)
+SHEET_NAMES = ['金融地产_小组', '周期性行业_小组', '消费行业_小组', '制造行业_小组', '科技行业_小组', '健康行业_小组', '其他_小组', '港股通_小组']
+STOCKS_CODE_FILE = '%s/股票代码名单.xlsx'%(DATA_DIR)
+HKSTOCKS_CODE_FILE = '%s/港股股票代码名单.xlsx'%(DATA_DIR)
+INDUSTRY_FILE = '%s/申万行业分类表.xlsx'%(DATA_DIR)
