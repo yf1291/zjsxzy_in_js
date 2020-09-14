@@ -4,10 +4,15 @@ import datetime as dt
 import os
 from WindPy import w
 
+pd.options.display.float_format = "{:.2f}".format
+
 import const
+import utils
 
 w.start()
-today = (dt.date.today() - dt.timedelta(1)).strftime('%Y%m%d')
+end_date = dt.datetime.today() - dt.timedelta(3)
+start_date = end_date - dt.timedelta(31)
+today = end_date.strftime('%Y%m%d')
 industry = pd.read_excel(const.INDUSTRY_FILE, sheet_name='申万二级行业')
 industry2theme = {}
 for col in industry.columns:
@@ -83,11 +88,11 @@ def stocks_list():
     df = pd.DataFrame(index=list(stock2theme.values()))
     df.index.name = '主题行业'
     df['股票名称'] = list(stock2theme.keys())
-    df['内部池（40%）'] = [1 if s in stock_cate['内部股票池'] else np.NaN for s in df['股票名称']]
-    df['外部池（20%）'] = [1 if s in stock_cate['外部股票池'] else np.NaN for s in df['股票名称']]
-    df['基金重仓池（20%）'] = [1 if s in stock_cate['基金重仓股票池'] else np.NaN for s in df['股票名称']]
-    df['外资重仓池（20%）'] = [1 if s in stock_cate['北向资金重仓股票池'] else np.NaN for s in df['股票名称']]
-    df['总分'] = df[df.columns[1:]].mul([0.4, 0.2, 0.2, 0.2], axis=1).sum(axis=1)
+    df['内部(40%)'] = [1 if s in stock_cate['内部股票池'] else np.NaN for s in df['股票名称']]
+    df['外部(20%)'] = [1 if s in stock_cate['外部股票池'] else np.NaN for s in df['股票名称']]
+    df['基金重仓(30%)'] = [1 if s in stock_cate['基金重仓股票池'] else np.NaN for s in df['股票名称']]
+    df['外资重仓(10%)'] = [1 if s in stock_cate['北向资金重仓股票池'] else np.NaN for s in df['股票名称']]
+    df['总分'] = df[df.columns[1:]].mul([0.4, 0.2, 0.3, 0.1], axis=1).sum(axis=1)
     industry = ['金融地产', '可选消费', '必选医药', '信息科技', '其他经济敏感', '其他经济不敏感']
     category_industry = pd.api.types.CategoricalDtype(categories=industry, ordered=True)
     df.index = df.index.astype(category_industry)
@@ -102,8 +107,8 @@ def stocks_earning_prediction():
     for s in const.SHEET_NAMES[1:]:
         temp = pd.read_excel('%s/%s'%(const.DATA_DIR, filename), sheet_name=s, skiprows=2)
         df = df.append(temp)
-    df = df[['公司名称', '上次预测时间', '最新短评', '最新长评']]
-    df.columns = ['股票名称', '上次预测时间', '短评', '长评']
+    df = df[['公司名称', '上次预测时间', '最新短评', '最新长评', '2020.4', '2021.4', '2022.4', '2020.11', '2021.11', '2022.11']]
+    df.columns = ['股票名称', '上次预测时间', '短评', '长评', '增速(2020)', '增速(2021)', '增速(2022)', 'eps(2020)', 'eps(2021)', 'eps(2022)']
 
     stocks = pd.read_excel(const.STOCKS_LIST_FILE)
     results = stocks.merge(df, how='left', on=['股票名称'])
@@ -122,23 +127,52 @@ def stocks_infomation():
     codes['股票代码'] = [codes.loc[i, '股票代码_y'] if pd.isna(codes.loc[i, '股票代码_x']) else codes.loc[i, '股票代码_x'] for i in codes.index]
     codes = codes[['股票名称', '股票代码']]
 
-    stocks = pd.read_excel(const.STOCKS_LIST_FILE)
+    stocks = pd.read_excel(const.STOCKS_LIST_FILE, 
+                           converters={'增速(2020)': utils.percent2float,
+                                       '增速(2021)': utils.percent2float,
+                                       '增速(2022)': utils.percent2float})
     results = stocks.merge(codes, how='left', on=['股票名称'])
 
+    # 计算股票动量
+    data = w.wsd(results['股票代码'].tolist(), 'close', start_date, end_date)
+    # print(data.Data)
+    prices = pd.DataFrame(data.Data, index=data.Codes, columns=data.Times)
+    prices = prices.T
+    returns = prices.pct_change().mean()
+    returns.index = np.arange(results.shape[0])
+    results['动量'] = returns
+
     data = w.wss(','.join(results['股票代码'].dropna().tolist()),
-                 "industry_sw,close,eps_ttm,pe_ttm,ps_ttm,pb_lyr,dividendyield2",
+                 "industry_sw,close",
                  "industryType=3;tradeDate=%s;priceAdj=U;cycle=D"%(today))
     info = pd.DataFrame(data.Data, 
-                        index=['细分行业', '收盘价', 'eps(ttm)', 'pe(ttm)', 'ps(ttm)', 'pb(lyr)', '股息率(ttm)'],
+                        index=['细分行业', '收盘价'],
                         columns=data.Codes)
     info = info.T
     info['细分行业'] = info['细分行业'].astype(str).map(lambda x: x.rstrip('Ⅲ'))
     info['股票代码'] = info.index
     results = results.merge(info, how='left', on=['股票代码'])
+    results['pe(2020)'] = results['收盘价'] / results['eps(2020)']
+    results['pe(2021)'] = results['收盘价'] / results['eps(2021)']
+    results['pe(2022)'] = results['收盘价'] / results['eps(2022)']
 
-    new_columns = stocks.columns[:2].tolist() + results.columns[-8:].tolist() + stocks.columns[2:].tolist()
-    results = results[new_columns]
+    results_columns = ['主题行业', '股票名称', '细分行业', '收盘价', '上次预测时间', '短评', '长评', '动量',
+                       '增速(2020)', '增速(2021)', '增速(2022)', 'pe(2020)', 'pe(2021)', 'pe(2022)',
+                       '内部(40%)', '外部(20%)', '基金重仓(30%)', '外资重仓(10%)', '总分']
+    results = results[results_columns]
     results.to_excel(const.STOCKS_LIST_FILE, index=False)
+
+def core_stocks_pool():
+    print("提取核心股票池")
+    df = pd.read_excel(const.STOCKS_LIST_FILE)
+    df['核心(10)'] = np.NaN
+    df['核心(20)'] = np.NaN
+    industry = ['可选消费', '必选医药', '信息科技']
+    for i in industry:
+        for k in [10, 20]:
+            temp = df[df['主题行业'] == i].sort_values('总分', ascending=False)[:k]
+            df.loc[temp.index, '核心(%s)'%(k)] = 'o'
+    df.to_excel(const.STOCKS_LIST_FILE, index=False)
 
 if __name__ == '__main__':
     calculate_connect_stocks()
@@ -148,3 +182,4 @@ if __name__ == '__main__':
     stocks_list()
     stocks_earning_prediction()
     stocks_infomation()
+    core_stocks_pool()
