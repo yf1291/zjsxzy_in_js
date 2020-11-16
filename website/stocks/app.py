@@ -4,20 +4,19 @@ import pandas as pd
 
 import const
 
+"""
 df = pd.read_excel(const.STOCKS_LIST_FILE, usecols='A:U', converters={'股票代码': str})
-# df['总分'] = df['总分'].map('{:,.1f}'.format)
 df['总分'] = df['总分'].round(2)
 df['收盘价'] = df['收盘价'].round(2)
 df['动量'] = (df['动量']*100).round(2)
-# df['pe(2020)'] = [x if pd.isna(x) else '{:,.2f}'.format(x) for x in df['pe(2020)']]
-# df['pe(2021)'] = [x if pd.isna(x) else '{:,.2f}'.format(x) for x in df['pe(2021)']]
-# df['pe(2022)'] = [x if pd.isna(x) else '{:,.2f}'.format(x) for x in df['pe(2022)']]
 df['pe(2020)'] = df['pe(2020)'].round(2)
 df['pe(2021)'] = df['pe(2021)'].round(2)
 df['pe(2022)'] = df['pe(2022)'].round(2)
 df['增速(2020)'] = [x if pd.isna(x) else '{:,.0f}%'.format(x*100) for x in df['增速(2020)']]
 df['增速(2021)'] = [x if pd.isna(x) else '{:,.0f}%'.format(x*100) for x in df['增速(2021)']]
 df['增速(2022)'] = [x if pd.isna(x) else '{:,.0f}%'.format(x*100) for x in df['增速(2022)']]
+"""
+df = pd.read_excel(const.TOP_STOCKS_LIST_FILE, usecols='A:T', converters={'股票代码': str})
 
 app = dash.Dash(__name__)
 

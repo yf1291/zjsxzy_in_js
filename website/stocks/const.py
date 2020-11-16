@@ -13,3 +13,6 @@ SHEET_NAMES = ['金融_小组', '大宗商品_小组', '可选消费_小组',
 STOCKS_CODE_FILE = '%s/股票代码名单.xlsx'%(DATA_DIR)
 HKSTOCKS_CODE_FILE = '%s/港股股票代码名单.xlsx'%(DATA_DIR)
 INDUSTRY_FILE = '%s/申万行业分类表.xlsx'%(DATA_DIR)
+
+TOP_STOCKS_FILE = '%s/行业龙头.xlsx'%(DATA_DIR)
+TOP_STOCKS_LIST_FILE = '%s/行业龙头股票池.xlsx'%(DATA_DIR)
